@@ -23,6 +23,19 @@ class DataSet :
     def __init__(self, datafile) -> None :
         df = pds.read_csv(datafile)
         df = df.dropna()
+
+        df['birth_year'] = (
+            pds.to_datetime(df['Birthday'], errors='coerce')
+               .dt.year
+               .astype('float')
+        )
+        df['is_right_handed'] = (
+            df['Best Hand']
+              .str.lower()
+              .map({'right': 1.0, 'left': 0.0})
+              .astype('float')
+        )
+
         self.features = list(df.columns)
         house_col = self.features[1]
         self.samples_by_house = {
