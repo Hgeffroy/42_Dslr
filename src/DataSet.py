@@ -124,7 +124,7 @@ class DataSet :
             os.makedirs(directory)
         fig.savefig(directory + 'scatter.png')
 
-    def matrix(self):
+    def pair_plot(self):
         colors = ['red', 'yellow', 'blue', 'green']
         houses = ['Gryffindor', 'Hufflepuff', 'Ravenclaw', 'Slytherin']
 
@@ -152,7 +152,7 @@ class DataSet :
         directory = 'figures/'
         if not os.path.isdir(directory):
             os.makedirs(directory)
-        figure.savefig(directory + 'matrix.png')
+        figure.savefig(directory + 'pair_plot.png')
 
     def print(self) :
         for house_name, house_data in self.samples_by_house.items() :
