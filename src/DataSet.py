@@ -1,6 +1,6 @@
 import os
-import csv
 import numpy as np
+import pandas as pds
 import math
 import matplotlib.pyplot as plt
 
@@ -58,20 +58,23 @@ class DataSet :
                            'Ravenclaw': np.array([]), 'Slytherin': np.array([])}
 
     def __init__(self, datafile) -> None :
-        with open(datafile) as cvsfile :
-            datareader = csv.reader(cvsfile)
-            self.features = next(datareader)
-            for row in datareader :
-                if '' in row :
-                    pass
-                else :
-                    self.samples.append(row)
-                    self.samples_by_house[row[1]].append(row)
-            tmp_samples = self.samples[:]
-        keep_numerical(self.features, tmp_samples)
-        self.np_samples = np.array(tmp_samples, dtype='d')
-        for house in self.np_samples_by_house :
-            self.np_samples_by_house[house] = np.array(self.samples_by_house[house], dtype='d')
+        df = pds.read_csv(datafile)
+        df = df.dropna()
+        self.features = list(df.columns)
+        house_col = self.features[1]
+        self.samples_by_house = {
+            house: group
+            for house, group in df.groupby(house_col)
+        }
+
+        numeric_df = df.select_dtypes(include=[np.number])
+
+        self.features = list(numeric_df.columns)
+        self.np_samples = numeric_df.values
+        self.np_samples_by_house = {
+            house: group[numeric_df.columns].values
+            for house, group in self.samples_by_house.items()
+        }
 
     def describe(self) :
         print(f"{'':10}" + " | ".join(f"{feat:12.12}" for feat in self.features))
