@@ -1,7 +1,7 @@
 import argparse
 import pandas as pds
 
-from DataSet import DataSet
+from LogisticRegression import LogisticRegression
 from utils import get_path
 
 def build_parser(description: str) -> argparse.ArgumentParser:
@@ -39,7 +39,7 @@ def main():
         print("Error: The CSV should have at least two columns.")
         return
 
-    dataset = DataSet(args.data)
+    dataset = LogisticRegression(args.data)
     dataset.histogram(args.feature)
 
 

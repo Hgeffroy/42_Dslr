@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from utils import get_path
 
 
-class DataSet :
+class LogisticRegression :
     """
         Stores the data of known Hogwarts students
     """
