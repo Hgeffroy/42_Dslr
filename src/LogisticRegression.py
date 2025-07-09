@@ -1,48 +1,13 @@
 import os
-import csv
 import numpy as np
+import pandas as pds
 import math
 import matplotlib.pyplot as plt
 
-def keep_numerical(features, samples) :
-    ref = samples[0]
-    for i in reversed(range(len(ref))) :
-        try :
-            float(ref[i])
-        except :
-            for sample in samples :
-                del sample[i]
-            del features[i]
+from utils import get_path
 
-def count(feature) :
-    return len(feature)
 
-def mean(feature) :
-    return np.sum(feature) / len(feature)
-
-def std(feature) :
-    return math.sqrt(np.sum((feature - mean(feature)) ** 2) / len(feature))
-
-def mini(feature) :
-    m = math.inf
-    for feat in feature :
-        if feat < m :
-            m = feat
-    return m
-
-def maxi(feature) :
-    m = -math.inf
-    for feat in feature :
-        if feat > m :
-            m = feat
-    return m
-
-def quantile(feature, p, q) :
-    feature = np.sort(feature)
-    h = (len(feature) + 1 / 4) * p / q + 3 / 8
-    return feature[math.floor(h)] + (h - math.floor(h)) * (feature[math.ceil(h)] - feature[math.floor(h)])
-
-class DataSet :
+class LogisticRegression :
     """
         Stores the data of known Hogwarts students
     """
@@ -56,31 +21,75 @@ class DataSet :
                            'Ravenclaw': np.array([]), 'Slytherin': np.array([])}
 
     def __init__(self, datafile) -> None :
-        with open(datafile) as cvsfile :
-            datareader = csv.reader(cvsfile)
-            self.features = next(datareader)
-            for row in datareader :
-                if '' in row :
-                    pass
-                else :
-                    self.samples.append(row)
-                    self.samples_by_house[row[1]].append(row)
-            tmp_samples = self.samples[:]
-        keep_numerical(self.features, tmp_samples)
-        self.np_samples = np.array(tmp_samples, dtype='d')
-        for house in self.np_samples_by_house :
-            self.np_samples_by_house[house] = np.array(self.samples_by_house[house], dtype='d')
+        df = pds.read_csv(datafile)
+        df = df.dropna()
+
+        df['birth_year'] = (
+            pds.to_datetime(df['Birthday'], errors='coerce')
+               .dt.year
+               .astype('float')
+        )
+        df['is_right_handed'] = (
+            df['Best Hand']
+              .str.lower()
+              .map({'right': 1.0, 'left': 0.0})
+              .astype('float')
+        )
+
+        self.features = list(df.columns)
+        house_col = self.features[1]
+        self.samples_by_house = {
+            house: group
+            for house, group in df.groupby(house_col)
+        }
+
+        numeric_df = df.select_dtypes(include=[np.number])
+
+        self.features = list(numeric_df.columns)
+        self.np_samples = numeric_df.values
+        self.np_samples_by_house = {
+            house: group[numeric_df.columns].values
+            for house, group in self.samples_by_house.items()
+        }
+
+    def _count(self, feature) :
+        return len(feature)
+
+    def _mean(self, feature) :
+        return np.sum(feature) / len(feature)
+
+    def _std(self, feature) :
+        return math.sqrt(np.sum((feature - self._mean(feature)) ** 2) / len(feature))
+
+    def _mini(self, feature) :
+        m = math.inf
+        for feat in feature :
+            if feat < m :
+                m = feat
+        return m
+
+    def _maxi(self, feature) :
+        m = -math.inf
+        for feat in feature :
+            if feat > m :
+                m = feat
+        return m
+
+    def _quantile(self, feature, p, q) :
+        feature = np.sort(feature)
+        h = (len(feature) + 1 / 4) * p / q + 3 / 8
+        return feature[math.floor(h)] + (h - math.floor(h)) * (feature[math.ceil(h)] - feature[math.floor(h)])
 
     def describe(self) :
         print(f"{'':10}" + " | ".join(f"{feat:12.12}" for feat in self.features))
-        print(f"{'Count':10}" + " | ".join(f"{count(self.np_samples[:, i]):12.5f}" for i in range(self.np_samples.shape[1])))
-        print(f"{'Mean':10}" + " | ".join(f"{mean(self.np_samples[:, i]):12.5f}" for i in range(self.np_samples.shape[1])))
-        print(f"{'Std':10}" + " | ".join(f"{std(self.np_samples[:, i]):12.5f}" for i in range(self.np_samples.shape[1])))
-        print(f"{'Min':10}" + " | ".join(f"{mini(self.np_samples[:, i]):12.5f}" for i in range(self.np_samples.shape[1])))
-        print(f"{'25%':10}" + " | ".join(f"{quantile(self.np_samples[:, i], 1, 4):12.5f}" for i in range(self.np_samples.shape[1])))
-        print(f"{'50%':10}" + " | ".join(f"{quantile(self.np_samples[:, i], 2, 4):12.5f}" for i in range(self.np_samples.shape[1])))
-        print(f"{'75%':10}" + " | ".join(f"{quantile(self.np_samples[:, i], 3, 4):12.5f}" for i in range(self.np_samples.shape[1])))
-        print(f"{'Max':10}" + " | ".join(f"{maxi(self.np_samples[:, i]):12.5f}" for i in range(self.np_samples.shape[1])))
+        print(f"{'Count':10}" + " | ".join(f"{self._count(self.np_samples[:, i]):12.5f}" for i in range(self.np_samples.shape[1])))
+        print(f"{'Mean':10}" + " | ".join(f"{self._mean(self.np_samples[:, i]):12.5f}" for i in range(self.np_samples.shape[1])))
+        print(f"{'Std':10}" + " | ".join(f"{self._std(self.np_samples[:, i]):12.5f}" for i in range(self.np_samples.shape[1])))
+        print(f"{'Min':10}" + " | ".join(f"{self._mini(self.np_samples[:, i]):12.5f}" for i in range(self.np_samples.shape[1])))
+        print(f"{'25%':10}" + " | ".join(f"{self._quantile(self.np_samples[:, i], 1, 4):12.5f}" for i in range(self.np_samples.shape[1])))
+        print(f"{'50%':10}" + " | ".join(f"{self._quantile(self.np_samples[:, i], 2, 4):12.5f}" for i in range(self.np_samples.shape[1])))
+        print(f"{'75%':10}" + " | ".join(f"{self._quantile(self.np_samples[:, i], 3, 4):12.5f}" for i in range(self.np_samples.shape[1])))
+        print(f"{'Max':10}" + " | ".join(f"{self._maxi(self.np_samples[:, i]):12.5f}" for i in range(self.np_samples.shape[1])))
 
 
     def histogram(self, feature):
@@ -98,7 +107,7 @@ class DataSet :
         plt.title(feature)
         plt.legend(loc='upper right')
 
-        directory = 'figures/'
+        directory = get_path('figures/')
         if not os.path.isdir(directory):
             os.makedirs(directory)
         fig.savefig(directory + 'histogram.png')
@@ -119,12 +128,12 @@ class DataSet :
         plt.xlabel(self.features[ft1_index])
         plt.ylabel(self.features[ft2_index])
 
-        directory = 'figures/'
+        directory = get_path('figures/')
         if not os.path.isdir(directory):
             os.makedirs(directory)
         fig.savefig(directory + 'scatter.png')
 
-    def matrix(self):
+    def pair_plot(self):
         colors = ['red', 'yellow', 'blue', 'green']
         houses = ['Gryffindor', 'Hufflepuff', 'Ravenclaw', 'Slytherin']
 
@@ -149,10 +158,10 @@ class DataSet :
                     idx += 1
 
         figure.tight_layout()
-        directory = 'figures/'
+        directory = get_path('figures/')
         if not os.path.isdir(directory):
             os.makedirs(directory)
-        figure.savefig(directory + 'matrix.png')
+        figure.savefig(directory + 'pair_plot.png')
 
     def print(self) :
         for house_name, house_data in self.samples_by_house.items() :
