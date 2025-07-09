@@ -4,6 +4,8 @@ import numpy as np
 import math
 import matplotlib.pyplot as plt
 
+from utils import get_path
+
 def keep_numerical(features, samples) :
     ref = samples[0]
     for i in reversed(range(len(ref))) :
@@ -98,7 +100,7 @@ class DataSet :
         plt.title(feature)
         plt.legend(loc='upper right')
 
-        directory = 'figures/'
+        directory = get_path('figures/')
         if not os.path.isdir(directory):
             os.makedirs(directory)
         fig.savefig(directory + 'histogram.png')
@@ -119,7 +121,7 @@ class DataSet :
         plt.xlabel(self.features[ft1_index])
         plt.ylabel(self.features[ft2_index])
 
-        directory = 'figures/'
+        directory = get_path('figures/')
         if not os.path.isdir(directory):
             os.makedirs(directory)
         fig.savefig(directory + 'scatter.png')
@@ -149,7 +151,7 @@ class DataSet :
                     idx += 1
 
         figure.tight_layout()
-        directory = 'figures/'
+        directory = get_path('figures/')
         if not os.path.isdir(directory):
             os.makedirs(directory)
         figure.savefig(directory + 'pair_plot.png')

@@ -14,7 +14,7 @@ def build_parser(description: str) -> argparse.ArgumentParser:
         help="The path to the data training CSV."
     )
     parser.add_argument(
-        "-f", "--features",
+        "-f", "--feature",
         type=str,
         default="Potions",
         help="The feature that we want to compare."
