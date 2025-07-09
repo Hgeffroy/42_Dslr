@@ -1,7 +1,7 @@
 import argparse
 import pandas as pds
 
-from LogisticRegression import LogisticRegression
+from logistic_regression import LogisticRegression
 from utils import get_path
 
 def build_parser(description: str) -> argparse.ArgumentParser:
