@@ -168,3 +168,45 @@ class LogisticRegression :
             print(house_name)
             print(house_data)
 
+
+    def _sigmoid(self, z):
+        return 1.0 / (1.0 + np.exp(-z))
+
+
+    def _gradient_descent(self, x, y):
+        theta0 = 0.0
+        theta1 = 0.0
+        m = len(x)
+
+        for _ in range(self.n_iter):
+            linear = theta1 * x + theta0
+            logistic = self._sigmoid(linear)
+            cost = logistic - y
+
+            gradient0 = (1 / m) * cost.sum()
+            gradient1 = (1 / m) * (cost * x).sum()
+
+            theta0 -= self.learning_rate * gradient0
+            theta1 -= self.learning_rate * gradient1
+
+        return theta0, theta1
+
+
+    def binary_classification(self):
+        astronomy_index = self.features.index('Astronomy')
+        herbology_index = self.features.index('Herbology')
+
+        self.df['is_gryffindor'] = (
+            self.df['Hogwarts House']
+              .str.lower()
+              .map({'Gryffindor': 1.0, 'Hufflepuff': 0.0, 'Ravenclaw': 0.0, 'Slytherin': 0.0})
+              .astype('float')
+        )
+
+        x = self.np_samples[astronomy_index]
+        # x2 = self.np_samples[herbology_index]
+        y = self.df['is_gryffindor']
+
+        theta0, theta1 = self._gradient_descent(x, y)
+
+        return
