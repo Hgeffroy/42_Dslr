@@ -13,8 +13,8 @@ class LogisticRegression :
     """
 
     np_samples = np.array([])
-    samples = []
     features = []
+    houses = []
     samples_by_house = {'Gryffindor': [], 'Hufflepuff': [],
                         'Ravenclaw': [], 'Slytherin': []}
     np_samples_by_house = {'Gryffindor': np.array([]), 'Hufflepuff': np.array([]),
@@ -37,10 +37,9 @@ class LogisticRegression :
         )
 
         self.features = list(df.columns)
-        house_col = self.features[1]
         self.samples_by_house = {
             house: group
-            for house, group in df.groupby(house_col)
+            for house, group in df.groupby(self.features[1])
         }
 
         numeric_df = df.select_dtypes(include=[np.number])
@@ -51,6 +50,8 @@ class LogisticRegression :
             house: group[numeric_df.columns].values
             for house, group in self.samples_by_house.items()
         }
+
+        self.houses = list(df['Hogwarts House'])
 
     def _count(self, feature) :
         return len(feature)
@@ -168,29 +169,41 @@ class LogisticRegression :
             print(house_name)
             print(house_data)
 
-
     def _sigmoid(self, z):
         return 1.0 / (1.0 + np.exp(-z))
 
+    def _cost_function(self, notes, isGryffindor, coeff):
+        return -(1 / len(notes)) * (isGryffindor * np.log(self._sigmoid(coeff * notes)) + (1 - isGryffindor) * np.log(1 - self._sigmoid(coeff * notes))).sum()
 
-    def _gradient_descent(self, x, y):
+    def _derivative_cost_function(self, notes, areGryffindor, coeff):
+        return (1 / len(notes)) * ((self._sigmoid(coeff * notes) - areGryffindor) * notes).sum()
+
+    def _derivative_cost_function(self, notes, areGryffindor, coeff):
+        a = [coeff * notes[i] for i in range(len(notes))]
+        sig = [self._sigmoid(a[i]) for i in range(len(a))]
+        b = [sig[i] - areGryffindor[i] for i in range(len(areGryffindor))]
+        return (1 / len(notes)) * sum(b)
+
+    def gradient_descent(self):
         theta0 = 0.0
-        theta1 = 0.0
-        m = len(x)
 
-        for _ in range(self.n_iter):
-            linear = theta1 * x + theta0
-            logistic = self._sigmoid(linear)
-            cost = logistic - y
+        features = self.features.copy()
+        features.remove('Index')
 
-            gradient0 = (1 / m) * cost.sum()
-            gradient1 = (1 / m) * (cost * x).sum()
+        print(self.features)
+        print(features)
 
-            theta0 -= self.learning_rate * gradient0
-            theta1 -= self.learning_rate * gradient1
+        notes = [self.np_samples[i][self.features.index('Transfiguration')] for i in range(len(self.np_samples))]
+        areGryffindor = [float(self.houses[i] == 'Gryffindor') for i in range(len(self.houses))]
 
-        return theta0, theta1
+        print(len(notes))
+        print(areGryffindor)
 
+        for _ in range(100000):
+            theta0 += self._derivative_cost_function(notes, areGryffindor, theta0)
+            print(theta0)
+
+        return theta0
 
     def binary_classification(self):
         astronomy_index = self.features.index('Astronomy')
