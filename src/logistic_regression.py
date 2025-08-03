@@ -12,6 +12,11 @@ class LogisticRegression :
         Stores the data of known Hogwarts students
     """
 
+    learning_rate = 0.01
+
+    min = 0.0
+    max = 0.0
+
     np_samples = np.array([])
     features = []
     houses = []
@@ -169,57 +174,48 @@ class LogisticRegression :
             print(house_name)
             print(house_data)
 
+
+    def normalize(self, values, min_values, max_values):
+        if min_values == max_values:
+            return np.zeros_like(values)
+        return (values - min_values) / (max_values - min_values)
+
+
     def _sigmoid(self, z):
         return 1.0 / (1.0 + np.exp(-z))
 
-    def _cost_function(self, notes, isGryffindor, coeff):
-        return -(1 / len(notes)) * (isGryffindor * np.log(self._sigmoid(coeff * notes)) + (1 - isGryffindor) * np.log(1 - self._sigmoid(coeff * notes))).sum()
 
-    def _derivative_cost_function(self, notes, areGryffindor, coeff):
-        return (1 / len(notes)) * ((self._sigmoid(coeff * notes) - areGryffindor) * notes).sum()
+    def _derivative_cost_function(self, notes, areGryffindor, intercept, weight):
+        linear_output = intercept + weight * notes
+        sig = self._sigmoid(linear_output)
+        error = sig - areGryffindor
 
-    def _derivative_cost_function(self, notes, areGryffindor, coeff):
-        a = [coeff * notes[i] for i in range(len(notes))]
-        sig = [self._sigmoid(a[i]) for i in range(len(a))]
-        b = [sig[i] - areGryffindor[i] for i in range(len(areGryffindor))]
-        return (1 / len(notes)) * sum(b)
+        m = len(notes)
+        derivative_intercept = (1 / m) * np.sum(error)
+        derivative_weight = (1 / m) * np.sum(error * notes)
+
+        return derivative_intercept, derivative_weight
 
     def gradient_descent(self):
-        theta0 = 0.0
+        intercept = 0.0
+        weight = 0.0
 
         features = self.features.copy()
         features.remove('Index')
 
-        print(self.features)
-        print(features)
-
-        notes = [self.np_samples[i][self.features.index('Transfiguration')] for i in range(len(self.np_samples))]
+        notes_raw = [self.np_samples[i][self.features.index('Transfiguration')] for i in range(len(self.np_samples))]
         areGryffindor = [float(self.houses[i] == 'Gryffindor') for i in range(len(self.houses))]
 
-        print(len(notes))
-        print(areGryffindor)
+        notes_raw = np.asarray(notes_raw, dtype=float)
+        areGryffindor = np.asarray(areGryffindor, dtype=float)
 
-        for _ in range(100000):
-            theta0 += self._derivative_cost_function(notes, areGryffindor, theta0)
-            print(theta0)
+        self.min = notes_raw.min()
+        self.max = notes_raw.max()
+        notes = self.normalize(notes_raw, self.min, self.max)
 
-        return theta0
+        for _ in range(2000):
+            derivative_intercept, derivative_weight = self._derivative_cost_function(notes, areGryffindor, intercept, weight)
+            intercept -= derivative_intercept * self.learning_rate
+            weight -= derivative_weight * self.learning_rate
 
-    def binary_classification(self):
-        astronomy_index = self.features.index('Astronomy')
-        herbology_index = self.features.index('Herbology')
-
-        self.df['is_gryffindor'] = (
-            self.df['Hogwarts House']
-              .str.lower()
-              .map({'Gryffindor': 1.0, 'Hufflepuff': 0.0, 'Ravenclaw': 0.0, 'Slytherin': 0.0})
-              .astype('float')
-        )
-
-        x = self.np_samples[astronomy_index]
-        # x2 = self.np_samples[herbology_index]
-        y = self.df['is_gryffindor']
-
-        theta0, theta1 = self._gradient_descent(x, y)
-
-        return
+        return intercept, weight
