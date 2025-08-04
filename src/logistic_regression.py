@@ -26,7 +26,10 @@ class LogisticRegression :
     def __init__(self, datafile) -> None :
         df = pds.read_csv(datafile)
         df = df.dropna()
+
         numeric_df = df.select_dtypes(include=[np.number])
+        self.features = list(numeric_df.columns)
+        self.np_samples = numeric_df.values
 
         df['birth_year'] = (
             pds.to_datetime(df['Birthday'], errors='coerce')
@@ -39,14 +42,9 @@ class LogisticRegression :
               .map({'right': 1.0, 'left': 0.0})
               .astype('float')
         )
-
-        self.features = list(df.columns)
-        self.features = list(numeric_df.columns)
-        self.np_samples = numeric_df.values
-
         samples_by_house = {
             house: group
-            for house, group in df.groupby(self.features[1])
+            for house, group in df.groupby(list(df.columns)[1])
         }
         self.np_samples_by_house = {
             house: group[numeric_df.columns].values
@@ -151,7 +149,7 @@ class LogisticRegression :
             if j > len(self.features) - 1 :
                 continue
             if ft == j :
-                ax.hist([self.np_samples_by_house[house][:, ft] for house in self.np_samples_by_house],
+                ax.hist([self.np_samples_by_house[house][:, ft] for house in houses],
                          color=colors, label=houses)
                 plt.setp(axis[-1, j], xlabel = self.features[j])
                 plt.setp(axis[j, 0], ylabel = self.features[ft])
@@ -213,9 +211,24 @@ class LogisticRegression :
         self.max = notes_raw.max()
         notes = self.normalize(notes_raw, self.min, self.max)
 
-        for _ in range(2000):
+        for _ in range(100000):
             derivative_intercept, derivative_weight = self._derivative_cost_function(notes, are_gryffindor, intercept, weight)
             intercept -= derivative_intercept * self.learning_rate
             weight -= derivative_weight * self.learning_rate
 
+        self.graph(notes, are_gryffindor, weight, intercept)
+
         return intercept, weight
+
+    def graph(self, notes, are_gryffindor, weight, intercept):
+
+        x1 = notes
+        y1 = are_gryffindor
+        x2 = [i * 0.01 for i in range(100)]
+        y2 = [self._sigmoid(weight * x + intercept) for x in x2]
+
+        print(len(y2))
+
+        plt.plot(x2, y2, label='sigmoid', color='blue')
+        plt.scatter(x1, y1, label='are_gryffindor', color='red')
+        plt.show()
