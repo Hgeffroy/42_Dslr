@@ -177,49 +177,54 @@ class LogisticRegression :
     def normalize(values, min_values, max_values):
         if min_values == max_values:
             return np.zeros_like(values)
-
-        m = max(abs(min_values), abs(max_values))
-        print(m)
-        return values / m
+        m = [max(abs(min_values[i]), abs(max_values[i])) for i in range(len(min_values))]
+        return [values[i] / m[i] for i in range(len(min_values))]
 
     @staticmethod
     def _sigmoid(z):
-        return 1.0 / (1.0 + np.exp(-z))
+        return [1.0 / (1.0 + np.exp(-x)) for x in z]
 
     def _derivative_cost_function(self, notes, are_gryffindor, intercept, weight):
-        linear_output = intercept + weight * notes
+        linear_output = [intercept[i] + weight[i] * notes[i] for i in range(len(intercept))]
+        print('output: ')
+        print(linear_output)
         sig = self._sigmoid(linear_output)
-        error = sig - are_gryffindor
+        print('sig')
+        print(sig)
+        error = [sig[i] - are_gryffindor for i in range(len(sig))]
+        print('error')
+        print(error)
+        print()
 
         m = len(notes)
-        derivative_intercept = (1 / m) * np.sum(error)
-        derivative_weight = (1 / m) * np.sum(error * notes)
+        derivative_intercept = [(1 / m) * np.sum(error[i]) for i in range(len(error))]
+        derivative_weight = [(1 / m) * np.sum(error[i] * notes) for i in range(len(error))]
 
         return derivative_intercept, derivative_weight
 
     def gradient_descent(self):
-        intercept = 0.0
-        weight = 0.0
+        intercept = [0.0, 0.0]
+        weight = [0.0, 0.0]
 
         features = self.features.copy()
         features.remove('Index')
 
-        notes_raw = [self.np_samples[i][self.features.index('Herbology')] for i in range(len(self.np_samples))]
+        notes_raw = [[self.np_samples[i][self.features.index('Herbology')] for i in range(len(self.np_samples))],
+                       [self.np_samples[i][self.features.index('Defense Against the Dark Arts')] for i in range(len(self.np_samples))]]
+        notes_raw = np.asarray(notes_raw, dtype = float)
         are_gryffindor = [float(self.houses[i] == 'Gryffindor') for i in range(len(self.houses))]
-
-        notes_raw = np.asarray(notes_raw, dtype=float)
         are_gryffindor = np.asarray(are_gryffindor, dtype=float)
 
-        self.min = notes_raw.min()
-        self.max = notes_raw.max()
+        self.min = [notes_raw[i].min() for i in range(notes_raw.shape[0])]
+        self.max = [notes_raw[i].max() for i in range(notes_raw.shape[0])]
         notes = self.normalize(notes_raw, self.min, self.max)
 
         for _ in range(100000):
             derivative_intercept, derivative_weight = self._derivative_cost_function(notes, are_gryffindor, intercept, weight)
-            intercept -= derivative_intercept * self.learning_rate
-            weight -= derivative_weight * self.learning_rate
+            intercept = [intercept[i] - derivative_intercept[i] * self.learning_rate for i in range(len(derivative_intercept))]
+            weight = [weight[i] - derivative_weight[i] * self.learning_rate for i in range(len(derivative_weight))]
 
-        self.graph(notes, are_gryffindor, weight, intercept)
+        # self.graph(notes, are_gryffindor, weight, intercept)
 
         return intercept, weight
 
@@ -229,8 +234,6 @@ class LogisticRegression :
         y1 = are_gryffindor
         x2 = [i * 0.01 for i in range(-100, 100)]
         y2 = [self._sigmoid(weight * x + intercept) for x in x2]
-
-        print(len(y2))
 
         plt.plot(x2, y2, label='sigmoid', color='blue')
         plt.scatter(x1, y1, label='are_gryffindor', color='red')
