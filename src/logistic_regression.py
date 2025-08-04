@@ -185,10 +185,10 @@ class LogisticRegression :
     def _sigmoid(z):
         return 1.0 / (1.0 + np.exp(-z))
 
-    def _derivative_cost_function(self, notes, areGryffindor, intercept, weight):
+    def _derivative_cost_function(self, notes, are_gryffindor, intercept, weight):
         linear_output = intercept + weight * notes
         sig = self._sigmoid(linear_output)
-        error = sig - areGryffindor
+        error = sig - are_gryffindor
 
         m = len(notes)
         derivative_intercept = (1 / m) * np.sum(error)
@@ -204,17 +204,17 @@ class LogisticRegression :
         features.remove('Index')
 
         notes_raw = [self.np_samples[i][self.features.index('Transfiguration')] for i in range(len(self.np_samples))]
-        areGryffindor = [float(self.houses[i] == 'Gryffindor') for i in range(len(self.houses))]
+        are_gryffindor = [float(self.houses[i] == 'Gryffindor') for i in range(len(self.houses))]
 
         notes_raw = np.asarray(notes_raw, dtype=float)
-        areGryffindor = np.asarray(areGryffindor, dtype=float)
+        are_gryffindor = np.asarray(are_gryffindor, dtype=float)
 
         self.min = notes_raw.min()
         self.max = notes_raw.max()
         notes = self.normalize(notes_raw, self.min, self.max)
 
         for _ in range(2000):
-            derivative_intercept, derivative_weight = self._derivative_cost_function(notes, areGryffindor, intercept, weight)
+            derivative_intercept, derivative_weight = self._derivative_cost_function(notes, are_gryffindor, intercept, weight)
             intercept -= derivative_intercept * self.learning_rate
             weight -= derivative_weight * self.learning_rate
 
