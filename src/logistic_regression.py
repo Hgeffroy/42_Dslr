@@ -17,17 +17,16 @@ class LogisticRegression :
     min = 0.0
     max = 0.0
 
-    np_samples = np.array([])
     features = []
     houses = []
-    samples_by_house = {'Gryffindor': [], 'Hufflepuff': [],
-                        'Ravenclaw': [], 'Slytherin': []}
+    np_samples = np.array([])
     np_samples_by_house = {'Gryffindor': np.array([]), 'Hufflepuff': np.array([]),
                            'Ravenclaw': np.array([]), 'Slytherin': np.array([])}
 
     def __init__(self, datafile) -> None :
         df = pds.read_csv(datafile)
         df = df.dropna()
+        numeric_df = df.select_dtypes(include=[np.number])
 
         df['birth_year'] = (
             pds.to_datetime(df['Birthday'], errors='coerce')
@@ -42,15 +41,13 @@ class LogisticRegression :
         )
 
         self.features = list(df.columns)
-        self.samples_by_house = {
+        self.features = list(numeric_df.columns)
+        self.np_samples = numeric_df.values
+
+        samples_by_house = {
             house: group
             for house, group in df.groupby(self.features[1])
         }
-
-        numeric_df = df.select_dtypes(include=[np.number])
-
-        self.features = list(numeric_df.columns)
-        self.np_samples = numeric_df.values
         self.np_samples_by_house = {
             house: group[numeric_df.columns].values
             for house, group in self.samples_by_house.items()
@@ -81,7 +78,7 @@ class LogisticRegression :
                 m = feat
         return m
 
-    def _quantile(self, feature, p, q) :
+    def _quartile(self, feature, p, q) :
         feature = np.sort(feature)
         h = (len(feature) + 1 / 4) * p / q + 3 / 8
         return feature[math.floor(h)] + (h - math.floor(h)) * (feature[math.ceil(h)] - feature[math.floor(h)])
@@ -92,9 +89,9 @@ class LogisticRegression :
         print(f"{'Mean':10}" + " | ".join(f"{self._mean(self.np_samples[:, i]):12.5f}" for i in range(self.np_samples.shape[1])))
         print(f"{'Std':10}" + " | ".join(f"{self._std(self.np_samples[:, i]):12.5f}" for i in range(self.np_samples.shape[1])))
         print(f"{'Min':10}" + " | ".join(f"{self._mini(self.np_samples[:, i]):12.5f}" for i in range(self.np_samples.shape[1])))
-        print(f"{'25%':10}" + " | ".join(f"{self._quantile(self.np_samples[:, i], 1, 4):12.5f}" for i in range(self.np_samples.shape[1])))
-        print(f"{'50%':10}" + " | ".join(f"{self._quantile(self.np_samples[:, i], 2, 4):12.5f}" for i in range(self.np_samples.shape[1])))
-        print(f"{'75%':10}" + " | ".join(f"{self._quantile(self.np_samples[:, i], 3, 4):12.5f}" for i in range(self.np_samples.shape[1])))
+        print(f"{'25%':10}" + " | ".join(f"{self._quartile(self.np_samples[:, i], 1, 4):12.5f}" for i in range(self.np_samples.shape[1])))
+        print(f"{'50%':10}" + " | ".join(f"{self._quartile(self.np_samples[:, i], 2, 4):12.5f}" for i in range(self.np_samples.shape[1])))
+        print(f"{'75%':10}" + " | ".join(f"{self._quartile(self.np_samples[:, i], 3, 4):12.5f}" for i in range(self.np_samples.shape[1])))
         print(f"{'Max':10}" + " | ".join(f"{self._maxi(self.np_samples[:, i]):12.5f}" for i in range(self.np_samples.shape[1])))
 
 
@@ -170,7 +167,7 @@ class LogisticRegression :
         figure.savefig(directory + 'pair_plot.png')
 
     def print(self) :
-        for house_name, house_data in self.samples_by_house.items() :
+        for house_name, house_data in self.np_samples_by_house.items() :
             print(house_name)
             print(house_data)
 
