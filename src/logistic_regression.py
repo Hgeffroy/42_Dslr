@@ -151,14 +151,14 @@ class LogisticRegression :
             if ft == j :
                 ax.hist([self.np_samples_by_house[house][:, ft] for house in houses],
                          color=colors, label=houses)
-                plt.setp(axis[-1, j], xlabel = self.features[j])
-                plt.setp(axis[j, 0], ylabel = self.features[ft])
+                plt.setp(axis[-1, j], xlabel = self.features[ft])
+                plt.setp(axis[j, 0], ylabel = self.features[j])
 
             else:
                 idx = 0
                 for house in self.np_samples_by_house :
-                    x = self.np_samples_by_house[house][:, ft]
-                    y = self.np_samples_by_house[house][:, j]
+                    x = self.np_samples_by_house[house][:, j]
+                    y = self.np_samples_by_house[house][:, ft]
                     ax.scatter(x, y, s=5, color=colors[idx])
                     idx += 1
 
@@ -177,7 +177,10 @@ class LogisticRegression :
     def normalize(values, min_values, max_values):
         if min_values == max_values:
             return np.zeros_like(values)
-        return (values - min_values) / (max_values - min_values)
+
+        m = max(abs(min_values), abs(max_values))
+        print(m)
+        return values / m
 
     @staticmethod
     def _sigmoid(z):
@@ -201,7 +204,7 @@ class LogisticRegression :
         features = self.features.copy()
         features.remove('Index')
 
-        notes_raw = [self.np_samples[i][self.features.index('Transfiguration')] for i in range(len(self.np_samples))]
+        notes_raw = [self.np_samples[i][self.features.index('Herbology')] for i in range(len(self.np_samples))]
         are_gryffindor = [float(self.houses[i] == 'Gryffindor') for i in range(len(self.houses))]
 
         notes_raw = np.asarray(notes_raw, dtype=float)
@@ -224,7 +227,7 @@ class LogisticRegression :
 
         x1 = notes
         y1 = are_gryffindor
-        x2 = [i * 0.01 for i in range(100)]
+        x2 = [i * 0.01 for i in range(-100, 100)]
         y2 = [self._sigmoid(weight * x + intercept) for x in x2]
 
         print(len(y2))
