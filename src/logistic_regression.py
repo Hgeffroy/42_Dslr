@@ -50,35 +50,40 @@ class LogisticRegression :
         }
         self.np_samples_by_house = {
             house: group[numeric_df.columns].values
-            for house, group in self.samples_by_house.items()
+            for house, group in samples_by_house.items()
         }
 
         self.houses = list(df['Hogwarts House'])
 
-    def _count(self, feature) :
+    @staticmethod
+    def _count(feature) :
         return len(feature)
 
-    def _mean(self, feature) :
+    @staticmethod
+    def _mean(feature) :
         return np.sum(feature) / len(feature)
 
     def _std(self, feature) :
         return math.sqrt(np.sum((feature - self._mean(feature)) ** 2) / len(feature))
 
-    def _mini(self, feature) :
+    @staticmethod
+    def _mini(feature) :
         m = math.inf
         for feat in feature :
             if feat < m :
                 m = feat
         return m
 
-    def _maxi(self, feature) :
+    @staticmethod
+    def _maxi(feature) :
         m = -math.inf
         for feat in feature :
             if feat > m :
                 m = feat
         return m
 
-    def _quartile(self, feature, p, q) :
+    @staticmethod
+    def _quartile(feature, p, q) :
         feature = np.sort(feature)
         h = (len(feature) + 1 / 4) * p / q + 3 / 8
         return feature[math.floor(h)] + (h - math.floor(h)) * (feature[math.ceil(h)] - feature[math.floor(h)])
@@ -93,7 +98,6 @@ class LogisticRegression :
         print(f"{'50%':10}" + " | ".join(f"{self._quartile(self.np_samples[:, i], 2, 4):12.5f}" for i in range(self.np_samples.shape[1])))
         print(f"{'75%':10}" + " | ".join(f"{self._quartile(self.np_samples[:, i], 3, 4):12.5f}" for i in range(self.np_samples.shape[1])))
         print(f"{'Max':10}" + " | ".join(f"{self._maxi(self.np_samples[:, i]):12.5f}" for i in range(self.np_samples.shape[1])))
-
 
     def histogram(self, feature):
         colors = ['red', 'yellow', 'blue', 'green']
@@ -171,16 +175,15 @@ class LogisticRegression :
             print(house_name)
             print(house_data)
 
-
-    def normalize(self, values, min_values, max_values):
+    @staticmethod
+    def normalize(values, min_values, max_values):
         if min_values == max_values:
             return np.zeros_like(values)
         return (values - min_values) / (max_values - min_values)
 
-
-    def _sigmoid(self, z):
+    @staticmethod
+    def _sigmoid(z):
         return 1.0 / (1.0 + np.exp(-z))
-
 
     def _derivative_cost_function(self, notes, areGryffindor, intercept, weight):
         linear_output = intercept + weight * notes
