@@ -190,7 +190,7 @@ class LogisticRegression :
         error = [sig[i] - are_gryffindor for i in range(len(sig))]
 
         derivative_intercept = [(1 / len(notes[i])) * np.sum(error[i]) for i in range(len(error))]
-        derivative_weight = [(1 / len(notes[i])) * np.sum(error[i] * notes) for i in range(len(error))]
+        derivative_weight = [(1 / len(notes[i])) * np.sum(error[i] * notes[i]) for i in range(len(error))]
 
         return derivative_intercept, derivative_weight
 
@@ -203,7 +203,7 @@ class LogisticRegression :
 
         notes_raw = [[self.np_samples[i][self.features.index('Herbology')] for i in range(len(self.np_samples))],
                        [self.np_samples[i][self.features.index('Defense Against the Dark Arts')] for i in range(len(self.np_samples))]]
-        notes_raw = np.asarray(notes_raw, dtype = float)
+        notes_raw = np.asarray(notes_raw, dtype=float)
         are_gryffindor = [float(self.houses[i] == 'Gryffindor') for i in range(len(self.houses))]
         are_gryffindor = np.asarray(are_gryffindor, dtype=float)
 
@@ -217,6 +217,9 @@ class LogisticRegression :
             weight = [weight[i] - (derivative_weight[i] * self.learning_rate) for i in range(len(derivative_weight))]
 
         return intercept, weight
+
+    def predict(self, intercept, weight):
+        pass
 
     def graph(self, notes, are_gryffindor, weight, intercept):
 
