@@ -186,19 +186,11 @@ class LogisticRegression :
 
     def _derivative_cost_function(self, notes, are_gryffindor, intercept, weight):
         linear_output = [intercept[i] + weight[i] * notes[i] for i in range(len(intercept))]
-        print('output: ')
-        print(linear_output)
         sig = self._sigmoid(linear_output)
-        print('sig')
-        print(sig)
         error = [sig[i] - are_gryffindor for i in range(len(sig))]
-        print('error')
-        print(error)
-        print()
 
-        m = len(notes)
-        derivative_intercept = [(1 / m) * np.sum(error[i]) for i in range(len(error))]
-        derivative_weight = [(1 / m) * np.sum(error[i] * notes) for i in range(len(error))]
+        derivative_intercept = [(1 / len(notes[i])) * np.sum(error[i]) for i in range(len(error))]
+        derivative_weight = [(1 / len(notes[i])) * np.sum(error[i] * notes) for i in range(len(error))]
 
         return derivative_intercept, derivative_weight
 
@@ -221,10 +213,8 @@ class LogisticRegression :
 
         for _ in range(100000):
             derivative_intercept, derivative_weight = self._derivative_cost_function(notes, are_gryffindor, intercept, weight)
-            intercept = [intercept[i] - derivative_intercept[i] * self.learning_rate for i in range(len(derivative_intercept))]
-            weight = [weight[i] - derivative_weight[i] * self.learning_rate for i in range(len(derivative_weight))]
-
-        # self.graph(notes, are_gryffindor, weight, intercept)
+            intercept = [intercept[i] - (derivative_intercept[i] * self.learning_rate) for i in range(len(derivative_intercept))]
+            weight = [weight[i] - (derivative_weight[i] * self.learning_rate) for i in range(len(derivative_weight))]
 
         return intercept, weight
 
