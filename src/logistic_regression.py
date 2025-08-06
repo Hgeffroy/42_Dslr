@@ -48,7 +48,7 @@ class LogisticRegression :
             for house, group in samples_by_house.items()
         }
 
-        self.houses = list(df['Hogwarts House'])
+        self.houses = ['Gryffindor', 'Hufflepuff', 'Ravenclaw', 'Slytherin']
 
     @staticmethod
     def _count(feature) :
@@ -88,11 +88,11 @@ class LogisticRegression :
         min_values = [values[i].min() for i in range(len(values))]
         max_values = [values[i].max() for i in range(len(values))]
         m = [max(abs(min_values[i]), abs(max_values[i])) for i in range(len(min_values))]
-        return [values[i] / m[i] for i in range(len(min_values))]
+        return [values[i] / m[i] for i in range(len(values))]
 
     @staticmethod
     def _sigmoid(z):
-        return [1.0 / (1.0 + np.exp(-x)) for x in z]
+        return 1.0 / (1.0 + np.exp(-z))
 
     def describe(self) :
         print(f"{'':10}" + " | ".join(f"{feat:12.12}" for feat in self.features))
@@ -111,7 +111,6 @@ class LogisticRegression :
             raise ValueError("Feature do not exist")
 
         ft_index = self.features.index(feature)
-        houses = ['Gryffindor', 'Hufflepuff', 'Ravenclaw', 'Slytherin']
 
         fig = plt.figure()
         plt.hist([self.np_samples_by_house[house][:,ft_index] for house in self.np_samples_by_house], color=colors, label=houses)
@@ -148,7 +147,6 @@ class LogisticRegression :
 
     def pair_plot(self):
         colors = ['red', 'yellow', 'blue', 'green']
-        houses = ['Gryffindor', 'Hufflepuff', 'Ravenclaw', 'Slytherin']
 
         figure, axis = plt.subplots(nrows=len(self.features), ncols=len(self.features), figsize=(50, 50))
         for i, ax in enumerate(axis.flat) :
@@ -157,8 +155,8 @@ class LogisticRegression :
             if j > len(self.features) - 1 :
                 continue
             if ft == j :
-                ax.hist([self.np_samples_by_house[house][:, ft] for house in houses],
-                         color=colors, label=houses)
+                ax.hist([self.np_samples_by_house[house][:, ft] for house in self.houses],
+                         color=colors, label=self.houses)
                 plt.setp(axis[-1, j], xlabel = self.features[ft])
                 plt.setp(axis[j, 0], ylabel = self.features[j])
 
@@ -181,37 +179,42 @@ class LogisticRegression :
             print(house_name)
             print(house_data)
 
-    def _derivative_cost_function(self, notes, are_gryffindor, intercept, weight):
-        linear_output = [intercept[i] + weight[i] * notes[i] for i in range(len(intercept))]
-        sig = self._sigmoid(linear_output)
-        error = [sig[i] - are_gryffindor for i in range(len(sig))]
+    def _derivative_cost_function(self, notes, binary_dict, intercept, weight):
+        intercept_dict = {}
+        weight_dict = {}
 
-        derivative_intercept = [(1 / len(notes[i])) * np.sum(error[i]) for i in range(len(error))]
-        derivative_weight = [(1 / len(notes[i])) * np.sum(error[i] * notes[i]) for i in range(len(error))]
+        for house in self.houses:
+            linear_output = [intercept[house][i] + weight[house][i] * notes[i] for i in range(len(intercept[house]))]
+            sig = [self._sigmoid(linear_output[i]) for i in range(len(linear_output))]
+            error = [sig[i] - binary_dict[house][i] for i in range(len(sig))]
+            intercept_dict[house] = [(1 / len(notes[i])) * np.sum(error[i]) for i in range(len(error))]
+            weight_dict[house] = [(1 / len(notes[i])) * np.sum(error[i] * notes[i]) for i in range(len(error))]
+        return intercept_dict, weight_dict
 
-        return derivative_intercept, derivative_weight
-
-    def gradient_descent(self):
+    def gradient_descent(self, training_features):
         # Passer le nom des features pour la regression logistique en parametre
-        intercept = [0.0, 0.0]
-        weight = [0.0, 0.0]
+        intercept = {'Gryffindor': [0.0] * len(training_features), 'Ravenclaw': [0.0] * len(training_features), 'Slytherin': [0.0] * len(training_features), 'Hufflepuff': [0.0] * len(training_features)}
+        weight = {'Gryffindor': [0.0] * len(training_features), 'Ravenclaw': [0.0] * len(training_features), 'Slytherin': [0.0] * len(training_features), 'Hufflepuff': [0.0] * len(training_features)}
 
         features = self.features.copy()
         features.remove('Index')
 
-        notes_raw = [[self.np_samples[i][self.features.index('Herbology')] for i in range(len(self.np_samples))],
-                    [self.np_samples[i][self.features.index('Defense Against the Dark Arts')] for i in range(len(self.np_samples))]]
-        notes_raw = np.asarray(notes_raw, dtype=float)
-        are_gryffindor = [float(self.houses[i] == 'Gryffindor') for i in range(len(self.houses))]
+        list_notes_raw = [np.array([self.np_samples[i][self.features.index(ft)] for i in range(len(self.np_samples))]) for ft in training_features]
 
-        notes = self._normalize(notes_raw)
+        binary_dict = {'Gryffindor': [float(self.houses[i] == 'Gryffindor') for i in range(len(self.houses))],
+                       'Ravenclaw': [float(self.houses[i] == 'Ravenclaw') for i in range(len(self.houses))],
+                       'Hufflepuff': [float(self.houses[i] == 'Hufflepuff') for i in range(len(self.houses))],
+                       'Slytherin': [float(self.houses[i] == 'Slytherin') for i in range(len(self.houses))]}
 
-        for _ in range(100000):
-            derivative_intercept, derivative_weight = self._derivative_cost_function(notes, are_gryffindor, intercept, weight)
-            intercept = [intercept[i] - (derivative_intercept[i] * self.learning_rate) for i in range(len(derivative_intercept))]
-            weight = [weight[i] - (derivative_weight[i] * self.learning_rate) for i in range(len(derivative_weight))]
+        notes = self._normalize(list_notes_raw)
 
-        self.predict(intercept, weight, [])
+        for _ in range(10000):
+            derivative_intercept_dict, derivative_weight_dict = self._derivative_cost_function(notes, binary_dict, intercept, weight)
+            for house in self.houses:
+                intercept[house] = [intercept[house][i] - (derivative_intercept_dict[house][i] * self.learning_rate) for i in range(len(derivative_intercept_dict[house]))]
+                weight[house] = [weight[house][i] - (derivative_weight_dict[house][i] * self.learning_rate) for i in range(len(derivative_weight_dict[house]))]
+
+        # self.predict(intercept, weight, [])
         return intercept, weight
 
     @staticmethod
@@ -225,15 +228,19 @@ class LogisticRegression :
             means.append(mean)
         return means
 
-    def predict(self, intercept, weight, features):
-        # Faire la moyenne des scores correspondant a chaque feature
-        # Ensuite prendre la moyenne la plus haute
-        features = ['Herbology', 'Defense Against the Dark Arts']
-        notes_raw = np.array([[self.np_samples[i][self.features.index(ft)] for i in range(len(self.np_samples))] for ft in features])
-        notes = self._normalize(notes_raw)
-        linear_output = [intercept[i] + weight[i] * notes[i] for i in range(len(intercept))]
-        raw_scores = self._sigmoid(linear_output)
-        scores = self._mean_scores(raw_scores)
+    # def predict(self, intercept, weight, features):
+    #     # Faire la moyenne des scores correspondant a chaque feature
+    #     # Ensuite prendre la moyenne la plus haute
+    #     features = ['Herbology', 'Defense Against the Dark Arts']
+    #     notes_raw = np.array([[self.np_samples[i][self.features.index(ft)] for i in range(len(self.np_samples))] for ft in features])
+    #     notes = self._normalize(notes_raw)
+    #     linear_output = [intercept[i] + weight[i] * notes[i] for i in range(len(intercept))]
+    #     raw_scores = self._sigmoid(linear_output)
+    #     scores = self._mean_scores(raw_scores)
+    #
+    #     np_scores = np.asarray(scores)
+    #     print(np_scores.max())
+    #     print(np_scores.min())
 
     def graph(self, notes, are_gryffindor, weight, intercept):
         x1 = notes
