@@ -208,13 +208,13 @@ class LogisticRegression :
 
         notes = self._normalize(list_notes_raw)
 
-        for _ in range(10000):
+        for _ in range(100000):
             derivative_intercept_dict, derivative_weight_dict = self._derivative_cost_function(notes, binary_dict, intercept, weight)
             for house in self.houses:
                 intercept[house] = [intercept[house][i] - (derivative_intercept_dict[house][i] * self.learning_rate) for i in range(len(derivative_intercept_dict[house]))]
                 weight[house] = [weight[house][i] - (derivative_weight_dict[house][i] * self.learning_rate) for i in range(len(derivative_weight_dict[house]))]
 
-        # self.predict(intercept, weight, [])
+        self.predict(intercept, weight, training_features)
         return intercept, weight
 
     @staticmethod
@@ -228,19 +228,21 @@ class LogisticRegression :
             means.append(mean)
         return means
 
-    # def predict(self, intercept, weight, features):
-    #     # Faire la moyenne des scores correspondant a chaque feature
-    #     # Ensuite prendre la moyenne la plus haute
-    #     features = ['Herbology', 'Defense Against the Dark Arts']
-    #     notes_raw = np.array([[self.np_samples[i][self.features.index(ft)] for i in range(len(self.np_samples))] for ft in features])
-    #     notes = self._normalize(notes_raw)
-    #     linear_output = [intercept[i] + weight[i] * notes[i] for i in range(len(intercept))]
-    #     raw_scores = self._sigmoid(linear_output)
-    #     scores = self._mean_scores(raw_scores)
-    #
-    #     np_scores = np.asarray(scores)
-    #     print(np_scores.max())
-    #     print(np_scores.min())
+    def predict(self, intercept, weight, features):
+        # Faire la moyenne des scores correspondant a chaque feature
+        # Ensuite prendre la moyenne la plus haute
+        scores = {}
+
+        notes_raw = [np.array([self.np_samples[i][self.features.index(ft)] for i in range(len(self.np_samples))]) for ft in features]
+        notes = self._normalize(notes_raw)
+        for house in self.houses :
+            linear_output = [intercept[house][i] + weight[house][i] * notes[i] for i in range(len(intercept[house]))]
+            raw_scores = [self._sigmoid(linear_output[i]) for i in range(len(linear_output))]
+            scores[house] = self._mean_scores(raw_scores)
+
+        house_index = [np.argmax(np.array([scores[house][i] for house in self.houses])) for i in range(len(notes[0]))]
+        houses = [self.houses[house_index[i]] for i in range(len(house_index))]
+        print(houses)
 
     def graph(self, notes, are_gryffindor, weight, intercept):
         x1 = notes
