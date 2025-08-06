@@ -12,10 +12,11 @@ class LogisticRegression :
         Stores the data of known Hogwarts students
     """
 
-    learning_rate = 0.01
+    learning_rate = 0.05
 
     features = []
-    houses = []
+    houses = ['Gryffindor', 'Hufflepuff', 'Ravenclaw', 'Slytherin']
+    pupils_houses = []
     np_samples = np.array([])
     np_samples_by_house = {'Gryffindor': np.array([]), 'Hufflepuff': np.array([]),
                            'Ravenclaw': np.array([]), 'Slytherin': np.array([])}
@@ -23,6 +24,7 @@ class LogisticRegression :
     def __init__(self, datafile) -> None :
         df = pds.read_csv(datafile)
         df = df.dropna()
+        self.pupils_houses = list(df['Hogwarts House'])
 
         numeric_df = df.select_dtypes(include=[np.number])
         self.features = list(numeric_df.columns)
@@ -47,8 +49,6 @@ class LogisticRegression :
             house: group[numeric_df.columns].values
             for house, group in samples_by_house.items()
         }
-
-        self.houses = ['Gryffindor', 'Hufflepuff', 'Ravenclaw', 'Slytherin']
 
     @staticmethod
     def _count(feature) :
@@ -113,7 +113,7 @@ class LogisticRegression :
         ft_index = self.features.index(feature)
 
         fig = plt.figure()
-        plt.hist([self.np_samples_by_house[house][:,ft_index] for house in self.np_samples_by_house], color=colors, label=houses)
+        plt.hist([self.np_samples_by_house[house][:,ft_index] for house in self.np_samples_by_house], color=colors, label=self.houses)
         plt.xlabel('Grade')
         plt.ylabel('Frequency')
         plt.title(feature)
@@ -185,8 +185,8 @@ class LogisticRegression :
 
         for house in self.houses:
             linear_output = [intercept[house][i] + weight[house][i] * notes[i] for i in range(len(intercept[house]))]
-            sig = [self._sigmoid(linear_output[i]) for i in range(len(linear_output))]
-            error = [sig[i] - binary_dict[house][i] for i in range(len(sig))]
+            sig = [[self._sigmoid(linear_output[j][i]) for i in range(len(linear_output[j]))] for j in range(len(linear_output))]
+            error = [[sig[j][i] - binary_dict[house][i] for i in range(len(sig[j]))] for j in range(len(sig))]
             intercept_dict[house] = [(1 / len(notes[i])) * np.sum(error[i]) for i in range(len(error))]
             weight_dict[house] = [(1 / len(notes[i])) * np.sum(error[i] * notes[i]) for i in range(len(error))]
         return intercept_dict, weight_dict
@@ -201,14 +201,14 @@ class LogisticRegression :
 
         list_notes_raw = [np.array([self.np_samples[i][self.features.index(ft)] for i in range(len(self.np_samples))]) for ft in training_features]
 
-        binary_dict = {'Gryffindor': [float(self.houses[i] == 'Gryffindor') for i in range(len(self.houses))],
-                       'Ravenclaw': [float(self.houses[i] == 'Ravenclaw') for i in range(len(self.houses))],
-                       'Hufflepuff': [float(self.houses[i] == 'Hufflepuff') for i in range(len(self.houses))],
-                       'Slytherin': [float(self.houses[i] == 'Slytherin') for i in range(len(self.houses))]}
+        binary_dict = {'Gryffindor': [float(self.pupils_houses[i] == 'Gryffindor') for i in range(len(self.pupils_houses))],
+                       'Ravenclaw': [float(self.pupils_houses[i] == 'Ravenclaw') for i in range(len(self.pupils_houses))],
+                       'Hufflepuff': [float(self.pupils_houses[i] == 'Hufflepuff') for i in range(len(self.pupils_houses))],
+                       'Slytherin': [float(self.pupils_houses[i] == 'Slytherin') for i in range(len(self.pupils_houses))]}
 
         notes = self._normalize(list_notes_raw)
 
-        for _ in range(100000):
+        for _ in range(1000):
             derivative_intercept_dict, derivative_weight_dict = self._derivative_cost_function(notes, binary_dict, intercept, weight)
             for house in self.houses:
                 intercept[house] = [intercept[house][i] - (derivative_intercept_dict[house][i] * self.learning_rate) for i in range(len(derivative_intercept_dict[house]))]
