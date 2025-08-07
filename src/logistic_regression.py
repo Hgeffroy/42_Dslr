@@ -106,11 +106,11 @@ class LogisticRegression :
         if os.path.exists(file):
             os.remove(file)
         with open(file, 'x', newline='') as csvfile:
-            fieldnames = ['intersect_' + ft for ft in features] + ['weight_' + ft for ft in features]
+            fieldnames = ['House'] + ['intersect_' + ft for ft in features] + ['weight_' + ft for ft in features]
             writer = csv.writer(csvfile, delimiter=',')
             writer.writerow(fieldnames)
             for house in LogisticRegression.houses:
-                writer.writerow(intercept[house] + weight[house])
+                writer.writerow([house] + intercept[house] + weight[house])
 
     @staticmethod
     def _store_prediction(houses, file):
@@ -141,7 +141,7 @@ class LogisticRegression :
         ft_index = self.features.index(feature)
 
         fig = plt.figure()
-        plt.hist([self.np_samples_by_house[house][:,ft_index] for house in self.np_samples_by_house], color=colors, label=self.houses)
+        plt.hist([self.np_samples_by_house[house][:,ft_index] for house in self.np_samples_by_house], color=colors, label=LogisticRegression.houses)
         plt.xlabel('Grade')
         plt.ylabel('Frequency')
         plt.title(feature)
@@ -183,8 +183,8 @@ class LogisticRegression :
             if j > len(self.features) - 1 :
                 continue
             if ft == j :
-                ax.hist([self.np_samples_by_house[house][:, ft] for house in self.houses],
-                         color=colors, label=self.houses)
+                ax.hist([self.np_samples_by_house[house][:, ft] for house in LogisticRegression.houses],
+                         color=colors, label=LogisticRegression.houses)
                 plt.setp(axis[-1, j], xlabel = self.features[ft])
                 plt.setp(axis[j, 0], ylabel = self.features[j])
 
@@ -211,7 +211,7 @@ class LogisticRegression :
         intercept_dict = {}
         weight_dict = {}
 
-        for house in self.houses:
+        for house in LogisticRegression.houses:
             linear_output = [intercept[house][i] + weight[house][i] * notes[i] for i in range(len(intercept[house]))]
             sig = [[self._sigmoid(linear_output[j][i]) for i in range(len(linear_output[j]))] for j in range(len(linear_output))]
             error = [[sig[j][i] - binary_dict[house][i] for i in range(len(sig[j]))] for j in range(len(sig))]
@@ -235,7 +235,8 @@ class LogisticRegression :
 
         notes = self._normalize(list_notes_raw)
 
-        for _ in range(10000):
+        for _ in range(1000):
+            print(_)
             derivative_intercept_dict, derivative_weight_dict = self._derivative_cost_function(notes, binary_dict, intercept, weight)
             for house in LogisticRegression.houses:
                 intercept[house] = [intercept[house][i] - (derivative_intercept_dict[house][i] * self.learning_rate) for i in range(len(derivative_intercept_dict[house]))]
@@ -244,7 +245,16 @@ class LogisticRegression :
         self._store_model(intercept, weight, training_features, 'models/models.csv')
         return intercept, weight
 
-    def predict(self, intercept, weight, features):
+    def predict(self, features, datacsv):
+        # features to get from csv file
+        intercept = {}
+        weight = {}
+        with open(datacsv, 'r') as f:
+            reader = csv.reader(f, delimiter=',')
+            for row in reader:
+                intercept[row[0]] = [float(row[1:int(len(row) / 2)][i]) for i in range(int(len(row) / 2))]
+                weight[row[0]] = [float(row[(int(len(row) + 1) / 2):][i])for i in range(int(len(row) / 2))]
+
         scores = {}
         notes_raw = [np.array([self.np_samples[i][self.features.index(ft)] for i in range(len(self.np_samples))]) for ft in features]
         notes = self._normalize(notes_raw)
