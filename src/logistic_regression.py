@@ -3,6 +3,7 @@ import numpy as np
 import pandas as pds
 import math
 import matplotlib.pyplot as plt
+import csv
 
 from utils import get_path
 
@@ -13,13 +14,7 @@ class LogisticRegression :
     """
 
     learning_rate = 0.05
-
-    features = []
     houses = ['Gryffindor', 'Hufflepuff', 'Ravenclaw', 'Slytherin']
-    pupils_houses = []
-    np_samples = np.array([])
-    np_samples_by_house = {'Gryffindor': np.array([]), 'Hufflepuff': np.array([]),
-                           'Ravenclaw': np.array([]), 'Slytherin': np.array([])}
 
     def __init__(self, datafile) -> None :
         df = pds.read_csv(datafile)
@@ -41,6 +36,7 @@ class LogisticRegression :
               .map({'right': 1.0, 'left': 0.0})
               .astype('float')
         )
+
         samples_by_house = {
             house: group
             for house, group in df.groupby(list(df.columns)[1])
@@ -93,6 +89,38 @@ class LogisticRegression :
     @staticmethod
     def _sigmoid(z):
         return 1.0 / (1.0 + np.exp(-z))
+
+    @staticmethod
+    def _mean_scores(raw_scores):
+        means = []
+        for index in range(len(raw_scores[0])):
+            mean = 0
+            for ft in range(len(raw_scores)):
+                mean += raw_scores[ft][index]
+            mean /= len(raw_scores)
+            means.append(mean)
+        return means
+
+    @staticmethod
+    def _store_model(intercept, weight, features, file):
+        if os.path.exists(file):
+            os.remove(file)
+        with open(file, 'x', newline='') as csvfile:
+            fieldnames = ['intersect_' + ft for ft in features] + ['weight_' + ft for ft in features]
+            writer = csv.writer(csvfile, delimiter=',')
+            writer.writerow(fieldnames)
+            for house in LogisticRegression.houses:
+                writer.writerow(intercept[house] + weight[house])
+
+    @staticmethod
+    def _store_prediction(houses, file):
+        if os.path.exists(file):
+            os.remove(file)
+        with open(file, 'x', newline='') as csvfile:
+            writer = csv.writer(csvfile, delimiter=',')
+            writer.writerow(['Index', 'Hogwarts House'])
+            for i in range(len(houses)):
+                writer.writerow([i, houses[i]])
 
     def describe(self) :
         print(f"{'':10}" + " | ".join(f"{feat:12.12}" for feat in self.features))
@@ -191,8 +219,7 @@ class LogisticRegression :
             weight_dict[house] = [(1 / len(notes[i])) * np.sum(error[i] * notes[i]) for i in range(len(error))]
         return intercept_dict, weight_dict
 
-    def gradient_descent(self, training_features):
-        # Passer le nom des features pour la regression logistique en parametre
+    def train(self, training_features):
         intercept = {'Gryffindor': [0.0] * len(training_features), 'Ravenclaw': [0.0] * len(training_features), 'Slytherin': [0.0] * len(training_features), 'Hufflepuff': [0.0] * len(training_features)}
         weight = {'Gryffindor': [0.0] * len(training_features), 'Ravenclaw': [0.0] * len(training_features), 'Slytherin': [0.0] * len(training_features), 'Hufflepuff': [0.0] * len(training_features)}
 
@@ -208,41 +235,27 @@ class LogisticRegression :
 
         notes = self._normalize(list_notes_raw)
 
-        for _ in range(1000):
+        for _ in range(10000):
             derivative_intercept_dict, derivative_weight_dict = self._derivative_cost_function(notes, binary_dict, intercept, weight)
-            for house in self.houses:
+            for house in LogisticRegression.houses:
                 intercept[house] = [intercept[house][i] - (derivative_intercept_dict[house][i] * self.learning_rate) for i in range(len(derivative_intercept_dict[house]))]
                 weight[house] = [weight[house][i] - (derivative_weight_dict[house][i] * self.learning_rate) for i in range(len(derivative_weight_dict[house]))]
 
-        self.predict(intercept, weight, training_features)
+        self._store_model(intercept, weight, training_features, 'models/models.csv')
         return intercept, weight
 
-    @staticmethod
-    def _mean_scores(raw_scores):
-        means = []
-        for index in range(len(raw_scores[0])):
-            mean = 0
-            for ft in range(len(raw_scores)):
-                mean += raw_scores[ft][index]
-            mean /= len(raw_scores)
-            means.append(mean)
-        return means
-
     def predict(self, intercept, weight, features):
-        # Faire la moyenne des scores correspondant a chaque feature
-        # Ensuite prendre la moyenne la plus haute
         scores = {}
-
         notes_raw = [np.array([self.np_samples[i][self.features.index(ft)] for i in range(len(self.np_samples))]) for ft in features]
         notes = self._normalize(notes_raw)
-        for house in self.houses :
+        for house in LogisticRegression.houses:
             linear_output = [intercept[house][i] + weight[house][i] * notes[i] for i in range(len(intercept[house]))]
             raw_scores = [self._sigmoid(linear_output[i]) for i in range(len(linear_output))]
             scores[house] = self._mean_scores(raw_scores)
 
-        house_index = [np.argmax(np.array([scores[house][i] for house in self.houses])) for i in range(len(notes[0]))]
-        houses = [self.houses[house_index[i]] for i in range(len(house_index))]
-        print(houses)
+        house_index = [np.argmax(np.array([scores[house][i] for house in LogisticRegression.houses])) for i in range(len(notes[0]))]
+        houses = [LogisticRegression.houses[house_index[i]] for i in range(len(house_index))]
+        self._store_prediction(houses, features)
 
     def graph(self, notes, are_gryffindor, weight, intercept):
         x1 = notes
@@ -253,3 +266,4 @@ class LogisticRegression :
         plt.plot(x2, y2, label='sigmoid', color='blue')
         plt.scatter(x1, y1, label='are_gryffindor', color='red')
         plt.show()
+
