@@ -103,8 +103,12 @@ class LogisticRegression :
 
     @staticmethod
     def _store_model(intercept, weight, features, file):
+        directory = get_path('models/')
+        if not os.path.isdir(directory):
+            os.makedirs(directory)
         if os.path.exists(file):
             os.remove(file)
+
         with open(file, 'x', newline='') as csvfile:
             fieldnames = ['House'] + ['intersect_' + ft for ft in features] + ['weight_' + ft for ft in features]
             writer = csv.writer(csvfile, delimiter=',')
@@ -114,8 +118,12 @@ class LogisticRegression :
 
     @staticmethod
     def _store_prediction(houses, file):
+        directory = get_path('predictions/')
+        if not os.path.isdir(directory):
+            os.makedirs(directory)
         if os.path.exists(file):
             os.remove(file)
+
         with open(file, 'x', newline='') as csvfile:
             writer = csv.writer(csvfile, delimiter=',')
             writer.writerow(['Index', 'Hogwarts House'])
@@ -235,7 +243,7 @@ class LogisticRegression :
 
         notes = self._normalize(list_notes_raw)
 
-        for _ in range(1000):
+        for _ in range(100):
             print(_)
             derivative_intercept_dict, derivative_weight_dict = self._derivative_cost_function(notes, binary_dict, intercept, weight)
             for house in LogisticRegression.houses:
@@ -243,17 +251,25 @@ class LogisticRegression :
                 weight[house] = [weight[house][i] - (derivative_weight_dict[house][i] * self.learning_rate) for i in range(len(derivative_weight_dict[house]))]
 
         self._store_model(intercept, weight, training_features, 'models/models.csv')
+        self.predict(get_path('models/models.csv'), get_path('datasets/dataset_test.csv'))
         return intercept, weight
 
-    def predict(self, features, datacsv):
+    def predict(self, modelcsv, datacsv):
         # features to get from csv file
         intercept = {}
         weight = {}
-        with open(datacsv, 'r') as f:
+        with open(modelcsv, 'r') as f:
             reader = csv.reader(f, delimiter=',')
+            row_count = 0
             for row in reader:
-                intercept[row[0]] = [float(row[1:int(len(row) / 2)][i]) for i in range(int(len(row) / 2))]
-                weight[row[0]] = [float(row[(int(len(row) + 1) / 2):][i])for i in range(int(len(row) / 2))]
+                if row_count == 0:
+                    features = [row[i].split('_')[1] for i in range(1, len(row))]
+                else:
+                    intersect_str = row[1:int((len(row) + 1) / 2)]
+                    weight_str = row[int((len(row) + 1) / 2):]
+                    intercept[row[0]] = [float(intersect_str[i]) for i in range(len(intersect_str))]
+                    weight[row[0]] = [float(weight_str[i]) for i in range(len(weight_str))]
+                row_count += 1
 
         scores = {}
         notes_raw = [np.array([self.np_samples[i][self.features.index(ft)] for i in range(len(self.np_samples))]) for ft in features]
@@ -265,7 +281,7 @@ class LogisticRegression :
 
         house_index = [np.argmax(np.array([scores[house][i] for house in LogisticRegression.houses])) for i in range(len(notes[0]))]
         houses = [LogisticRegression.houses[house_index[i]] for i in range(len(house_index))]
-        self._store_prediction(houses, features)
+        self._store_prediction(houses, get_path('predictions/predictions.csv'))
 
     def graph(self, notes, are_gryffindor, weight, intercept):
         x1 = notes
