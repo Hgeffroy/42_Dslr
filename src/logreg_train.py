@@ -5,10 +5,8 @@ from utils import get_path
 
 def main():
     dataset = Dataset(get_path("datasets/dataset_train.csv"))
-    model = LogisticModel(dataset)
-    theta = model.train(['Herbology', 'Defense Against the Dark Arts'])
-
-    print(theta)
+    model = LogisticModel()
+    model.train(dataset, ['Herbology', 'Defense Against the Dark Arts'])
 
 
 if __name__ == "__main__":

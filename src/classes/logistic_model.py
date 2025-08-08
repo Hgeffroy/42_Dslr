@@ -28,8 +28,8 @@ class LogisticModel:
     learning_rate = 0.05
     houses = ['Gryffindor', 'Hufflepuff', 'Ravenclaw', 'Slytherin']
 
-    def __init__(self, dataset) -> None:
-        self.dataset = dataset
+    def __init__(self) -> None:
+        pass
 
     @staticmethod
     def _normalize(values):
@@ -94,13 +94,13 @@ class LogisticModel:
             weight_dict[house] = [(1 / len(notes[i])) * np.sum(error[i] * notes[i]) for i in range(len(error))]
         return intercept_dict, weight_dict
 
-    def train(self, training_features):
+    def train(self, training_dataset, training_features):
         intercept = {'Gryffindor': [0.0] * len(training_features), 'Ravenclaw': [0.0] * len(training_features), 'Slytherin': [0.0] * len(training_features), 'Hufflepuff': [0.0] * len(training_features)}
         weight = {'Gryffindor': [0.0] * len(training_features), 'Ravenclaw': [0.0] * len(training_features), 'Slytherin': [0.0] * len(training_features), 'Hufflepuff': [0.0] * len(training_features)}
 
-        features = self.dataset.get_features()
-        samples = self.dataset.get_samples()
-        pupils_houses = self.dataset.get_pupils_houses()
+        features = training_dataset.get_features()
+        samples = training_dataset.get_samples()
+        pupils_houses = training_dataset.get_pupils_houses()
 
         list_notes_raw = [np.array([samples[i][features.index(ft)] for i in range(len(samples))]) for ft in training_features]
 
@@ -119,14 +119,12 @@ class LogisticModel:
                 weight[house] = [weight[house][i] - (derivative_weight_dict[house][i] * self.learning_rate) for i in range(len(derivative_weight_dict[house]))]
 
         self._store_model(intercept, weight, training_features, 'models/models.csv')
-        self.predict(get_path('models/models.csv'), get_path('datasets/dataset_test.csv'))
-        return intercept, weight
 
-    def predict(self, modelcsv, datacsv):
+    def predict(self, model_csv, predict_dataset):
         # features to get from csv file
         intercept = {}
         weight = {}
-        with open(modelcsv, 'r') as f:
+        with open(model_csv, 'r') as f:
             reader = csv.reader(f, delimiter=',')
             row_count = 0
             for row in reader:
@@ -140,8 +138,7 @@ class LogisticModel:
                 row_count += 1
 
         scores = {}
-        samples = self.dataset.get_samples()
-        features = self.dataset.get_features()
+        samples = predict_dataset.get_samples()
         notes_raw = [np.array([samples[i][features.index(ft)] for i in range(len(samples))]) for ft in features]
         notes = self._normalize(notes_raw)
         for house in LogisticModel.houses:

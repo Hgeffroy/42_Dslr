@@ -5,8 +5,8 @@ from utils import get_path
 
 def main():
     dataset = Dataset(get_path("datasets/dataset_train.csv"))
-    model = LogisticModel(dataset)
-    # model.predict(get_path("datasets/dataset_test.csv"))
+    model = LogisticModel()
+    model.predict(get_path("models/models.csv"), dataset)
 
 
 if __name__ == "__main__":
