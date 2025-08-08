@@ -24,6 +24,7 @@ class LogisticModel:
     """
 
     learning_rate = 0.05
+    accuracy = 0.0001
     houses = ['Gryffindor', 'Hufflepuff', 'Ravenclaw', 'Slytherin']
 
     def __init__(self) -> None:
@@ -80,6 +81,19 @@ class LogisticModel:
             for i in range(len(houses)):
                 writer.writerow([i, houses[i]])
 
+    def _accuracy_reached(self, derivative_intercept_dict, derivative_weight_dict):
+        for house in derivative_intercept_dict:
+            for value in derivative_intercept_dict[house]:
+                if value > self.accuracy:
+                    return False
+
+        for house in derivative_weight_dict:
+            for value in derivative_weight_dict[house]:
+                if value > self.accuracy:
+                    return False
+
+        return True
+
     def _derivative_cost_function(self, notes, binary_dict, intercept, weight):
         intercept_dict = {}
         weight_dict = {}
@@ -109,8 +123,11 @@ class LogisticModel:
 
         notes = self._normalize(list_notes_raw)
 
-        for _ in trange(10000, desc='Training'):
+        # Need to add another stop condition (derivative small enough)
+        for _ in trange(100000, desc='Training'):
             derivative_intercept_dict, derivative_weight_dict = self._derivative_cost_function(notes, binary_dict, intercept, weight)
+            if self._accuracy_reached(derivative_intercept_dict, derivative_weight_dict):
+                break
             for house in LogisticModel.houses:
                 intercept[house] = [intercept[house][i] - (derivative_intercept_dict[house][i] * self.learning_rate) for i in range(len(derivative_intercept_dict[house]))]
                 weight[house] = [weight[house][i] - (derivative_weight_dict[house][i] * self.learning_rate) for i in range(len(derivative_weight_dict[house]))]
