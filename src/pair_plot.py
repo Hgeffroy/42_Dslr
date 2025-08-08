@@ -1,8 +1,9 @@
 import argparse
 import pandas as pds
 
-from classes.logistic_model import LogisticModel
+from classes.dataset import Dataset
 from utils import get_path
+
 
 def build_parser(description: str) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=description)
@@ -15,6 +16,7 @@ def build_parser(description: str) -> argparse.ArgumentParser:
     )
 
     return parser
+
 
 def main():
     parser = build_parser(description='Describe statistical indicators of a dataset.')
@@ -33,7 +35,7 @@ def main():
         print("Error: The CSV should have at least two columns.")
         return
 
-    dataset = LogisticModel(args.data)
+    dataset = Dataset(args.data)
     dataset.pair_plot()
 
 

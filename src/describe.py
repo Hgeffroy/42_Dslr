@@ -1,8 +1,7 @@
-import matplotlib.pyplot as plt
 import argparse
 import pandas as pds
 
-from classes.logistic_model import LogisticModel
+from classes.dataset import Dataset
 from utils import get_path
 
 
@@ -36,7 +35,7 @@ def main():
         print("Error: The CSV should have at least two columns.")
         return
 
-    dataset = LogisticModel(args.data)
+    dataset = Dataset(args.data)
     dataset.describe()
 
 
