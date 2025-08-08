@@ -1,10 +1,8 @@
 import os
 import numpy as np
-import pandas as pds
-import math
-import matplotlib.pyplot as plt
 import csv
 import sys
+from tqdm import trange
 
 current = os.path.dirname(os.path.realpath(__file__))
 
@@ -111,8 +109,7 @@ class LogisticModel:
 
         notes = self._normalize(list_notes_raw)
 
-        for _ in range(100):
-            print(_)
+        for _ in trange(10000, desc='Training'):
             derivative_intercept_dict, derivative_weight_dict = self._derivative_cost_function(notes, binary_dict, intercept, weight)
             for house in LogisticModel.houses:
                 intercept[house] = [intercept[house][i] - (derivative_intercept_dict[house][i] * self.learning_rate) for i in range(len(derivative_intercept_dict[house]))]
@@ -149,14 +146,3 @@ class LogisticModel:
         house_index = [np.argmax(np.array([scores[house][i] for house in LogisticModel.houses])) for i in range(len(notes[0]))]
         houses = [LogisticModel.houses[house_index[i]] for i in range(len(house_index))]
         self._store_prediction(houses, get_path('predictions/predictions.csv'))
-
-    # def graph(self, notes, are_gryffindor, weight, intercept):
-    #     x1 = notes
-    #     y1 = are_gryffindor
-    #     x2 = [i * 0.01 for i in range(-100, 100)]
-    #     y2 = [self._sigmoid(weight * x + intercept) for x in x2]
-    #
-    #     plt.plot(x2, y2, label='sigmoid', color='blue')
-    #     plt.scatter(x1, y1, label='are_gryffindor', color='red')
-    #     plt.show()
-
