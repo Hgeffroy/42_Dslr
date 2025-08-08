@@ -4,11 +4,22 @@ import pandas as pds
 import math
 import matplotlib.pyplot as plt
 import csv
+import sys
+
+current = os.path.dirname(os.path.realpath(__file__))
+
+# Getting the parent directory name
+# where the current directory is present.
+parent = os.path.dirname(current)
+
+# adding the parent directory to
+# the sys.path.
+sys.path.append(parent)
 
 from utils import get_path
 
 
-class LogisticRegression :
+class LogisticModel:
     """
         Stores the data of known Hogwarts students
     """

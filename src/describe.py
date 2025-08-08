@@ -2,8 +2,9 @@ import matplotlib.pyplot as plt
 import argparse
 import pandas as pds
 
-from logistic_regression import LogisticRegression
+from classes.logistic_model import LogisticModel
 from utils import get_path
+
 
 def build_parser(description: str) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=description)
@@ -16,6 +17,7 @@ def build_parser(description: str) -> argparse.ArgumentParser:
     )
 
     return parser
+
 
 def main():
     parser = build_parser(description='Describe statistical indicators of a dataset.')
@@ -34,8 +36,9 @@ def main():
         print("Error: The CSV should have at least two columns.")
         return
 
-    dataset = LogisticRegression(args.data)
+    dataset = LogisticModel(args.data)
     dataset.describe()
+
 
 if __name__ == "__main__":
     main()
