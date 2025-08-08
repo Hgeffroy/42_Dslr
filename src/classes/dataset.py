@@ -80,11 +80,23 @@ class Dataset:
         return m
 
     @staticmethod
+    def _range(feature):
+        return Dataset._maxi(feature) - Dataset._mini(feature)
+
+    @staticmethod
     def _quartile(feature, p, q):
         feature = np.sort(feature)
         h = (len(feature) + 1 / 4) * p / q + 3 / 8
         return feature[math.floor(h)] + (h - math.floor(h)) * (
                     feature[math.ceil(h)] - feature[math.floor(h)])
+
+    @staticmethod
+    def _median(feature):
+        feature = np.sort(feature)
+        if len(feature) % 2 == 0:
+            return (feature[int(len(feature) / 2)] + feature[int(len(feature) / 2) - 1]) / 2
+        else:
+            return feature[int(len(feature) / 2)]
 
     def get_features(self):
         return self.features
@@ -99,12 +111,14 @@ class Dataset:
         print(f"{'':10}" + " | ".join(f"{feat:12.12}" for feat in self.features))
         print(f"{'Count':10}" + " | ".join(f"{self._count(self.np_samples[:, i]):12.5f}" for i in range(self.np_samples.shape[1])))
         print(f"{'Mean':10}" + " | ".join(f"{self._mean(self.np_samples[:, i]):12.5f}" for i in range(self.np_samples.shape[1])))
+        print(f"{'Median':10}" + " | ".join(f"{self._median(self.np_samples[:, i]):12.5f}" for i in range(self.np_samples.shape[1])))
         print(f"{'Std':10}" + " | ".join(f"{self._std(self.np_samples[:, i]):12.5f}" for i in range(self.np_samples.shape[1])))
         print(f"{'Min':10}" + " | ".join(f"{self._mini(self.np_samples[:, i]):12.5f}" for i in range(self.np_samples.shape[1])))
         print(f"{'25%':10}" + " | ".join(f"{self._quartile(self.np_samples[:, i], 1, 4):12.5f}" for i in range(self.np_samples.shape[1])))
         print(f"{'50%':10}" + " | ".join(f"{self._quartile(self.np_samples[:, i], 2, 4):12.5f}" for i in range(self.np_samples.shape[1])))
         print(f"{'75%':10}" + " | ".join(f"{self._quartile(self.np_samples[:, i], 3, 4):12.5f}" for i in range(self.np_samples.shape[1])))
         print(f"{'Max':10}" + " | ".join(f"{self._maxi(self.np_samples[:, i]):12.5f}" for i in range(self.np_samples.shape[1])))
+        print(f"{'Range':10}" + " | ".join(f"{self._range(self.np_samples[:, i]):12.5f}" for i in range(self.np_samples.shape[1])))
 
     def histogram(self, feature):
         colors = ['red', 'yellow', 'blue', 'green']
