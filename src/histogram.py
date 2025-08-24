@@ -20,6 +20,12 @@ def build_parser(description: str) -> argparse.ArgumentParser:
         default="Potions",
         help="The feature that we want to compare."
     )
+    parser.add_argument(
+        "-n", "--filename",
+        type=str,
+        default="histogram",
+        help="The name of the image file."
+    )
 
     return parser
 
@@ -42,7 +48,7 @@ def main():
         return
 
     dataset = Dataset(args.data)
-    dataset.histogram(args.feature)
+    dataset.histogram(args.feature, args.filename)
 
 
 if __name__ == "__main__":
