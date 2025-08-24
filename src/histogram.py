@@ -17,7 +17,7 @@ def build_parser(description: str) -> argparse.ArgumentParser:
     parser.add_argument(
         "-f", "--feature",
         type=str,
-        default="Potions",
+        default="Care of Magical Creatures",
         help="The feature that we want to compare."
     )
     parser.add_argument(
