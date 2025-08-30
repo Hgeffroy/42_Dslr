@@ -5,13 +5,7 @@ import sys
 from tqdm import trange
 
 current = os.path.dirname(os.path.realpath(__file__))
-
-# Getting the parent directory name
-# where the current directory is present.
 parent = os.path.dirname(current)
-
-# adding the parent directory to
-# the sys.path.
 sys.path.append(parent)
 
 from utils import get_path
@@ -20,7 +14,7 @@ from classes.dataset import Dataset
 
 class LogisticModel:
     """
-        Stores the data of known Hogwarts students
+        Logistic Regression One vs Rest.
     """
 
     learning_rate = 0.05
@@ -32,10 +26,16 @@ class LogisticModel:
 
     @staticmethod
     def _normalize(values):
-        min_values = [values[i].min() for i in range(len(values))]
-        max_values = [values[i].max() for i in range(len(values))]
-        m = [max(abs(min_values[i]), abs(max_values[i])) for i in range(len(min_values))]
-        return [values[i] / m[i] for i in range(len(values))]
+        # values is a list of np.ndarray (one per feature)
+        if not values or any(v.size == 0 for v in values):
+            raise ValueError("No data to normalize (empty list or empty features)."
+                            " Verify that the test dataset contains valid rows.")
+
+        min_values = [v.min() for v in values]
+        max_values = [v.max() for v in values]
+        m = [max(abs(a), abs(b), 1e-12) for a, b in zip(min_values, max_values)]  # avoid / 0
+        return [v / m[i] for i, v in enumerate(values)]
+
 
     @staticmethod
     def _sigmoid(z):
@@ -81,6 +81,7 @@ class LogisticModel:
             for i in range(len(houses)):
                 writer.writerow([i, houses[i]])
 
+
     def _accuracy_reached(self, derivative_intercept_dict, derivative_weight_dict):
         for house in derivative_intercept_dict:
             for value in derivative_intercept_dict[house]:
@@ -94,6 +95,7 @@ class LogisticModel:
 
         return True
 
+
     def _derivative_cost_function(self, notes, binary_dict, intercept, weight):
         intercept_dict = {}
         weight_dict = {}
@@ -105,6 +107,7 @@ class LogisticModel:
             intercept_dict[house] = [(1 / len(notes[i])) * np.sum(error[i]) for i in range(len(error))]
             weight_dict[house] = [(1 / len(notes[i])) * np.sum(error[i] * notes[i]) for i in range(len(error))]
         return intercept_dict, weight_dict
+
 
     def train(self, training_dataset, training_features):
         intercept = {'Gryffindor': [0.0] * len(training_features), 'Ravenclaw': [0.0] * len(training_features), 'Slytherin': [0.0] * len(training_features), 'Hufflepuff': [0.0] * len(training_features)}
