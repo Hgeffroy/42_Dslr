@@ -23,7 +23,7 @@ class Dataset:
 
     def __init__(self, datafile) -> None:
         df = pds.read_csv(datafile)
-        df = df.dropna()
+        df = df.dropna(subset=[c for c in df.columns if c != 'Hogwarts House'])
         self.pupils_houses = list(df['Hogwarts House'])
 
         numeric_df = df.select_dtypes(include=[np.number])
@@ -51,6 +51,36 @@ class Dataset:
             for house, group in samples_by_house.items()
         }
 
+
+    def __repr__(self):
+        # samples/features
+        n_samples = int(self.np_samples.shape[0]) if hasattr(self, "np_samples") else 0
+        n_features = int(self.np_samples.shape[1]) if hasattr(self, "np_samples") and self.np_samples.size else 0
+
+        # class balance (order aligned with Dataset.houses)
+        house_counts = []
+        if hasattr(self, "np_samples_by_house") and isinstance(self.np_samples_by_house, dict):
+            for h in Dataset.houses:
+                house_counts.append(len(self.np_samples_by_house.get(h, [])))
+        else:
+            house_counts = [0, 0, 0, 0]
+
+        # feature preview
+        feat_preview_len = 5
+        feats = getattr(self, "features", [])
+        feat_preview = ", ".join(feats[:feat_preview_len]) + ("..." if len(feats) > feat_preview_len else "")
+
+        # build a compact repr
+        counts_str = ", ".join(f"{h}:{c}" for h, c in zip(Dataset.houses, house_counts))
+        return (f"<Dataset {n_samples} samples, {n_features} features | "
+                f"classes[{counts_str}] | feats[{feat_preview}]>")
+
+    def __str__(self):
+        return self.__repr__()
+
+    def __len__(self):
+        return int(self.np_samples.shape[0]) if hasattr(self, "np_samples") else 0
+
     @staticmethod
     def _count(feature):
         return len(feature)
@@ -62,6 +92,7 @@ class Dataset:
     def _std(self, feature):
         return math.sqrt(
             np.sum((feature - self._mean(feature)) ** 2) / len(feature))
+
 
     @staticmethod
     def _mini(feature):
