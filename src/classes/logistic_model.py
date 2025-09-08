@@ -89,7 +89,7 @@ class LogisticModel:
 
         for house in derivative_weight_dict:
             for value in derivative_weight_dict[house]:
-                if value > self.accuracy:
+                if abs(value) > self.accuracy:
                     return False
 
         return True
@@ -135,25 +135,42 @@ class LogisticModel:
         self._store_model(intercept, weight, training_features, 'models/models.csv')
 
     def predict(self, model_csv, predict_dataset):
-        # features to get from csv file
         intercept = {}
         weight = {}
         with open(model_csv, 'r') as f:
             reader = csv.reader(f, delimiter=',')
-            row_count = 0
-            for row in reader:
-                if row_count == 0:
-                    features = [row[i].split('_')[1] for i in range(1, len(row))]
-                else:
-                    intersect_str = row[1:int((len(row) + 1) / 2)]
-                    weight_str = row[int((len(row) + 1) / 2):]
-                    intercept[row[0]] = [float(intersect_str[i]) for i in range(len(intersect_str))]
-                    weight[row[0]] = [float(weight_str[i]) for i in range(len(weight_str))]
-                row_count += 1
+            header = next(reader)
 
+            # number of learned features
+            n = (len(header) - 1) // 2
+
+            # keep only one feature list
+            intersect_cols = header[1:1+n]       # ex: ['intersect_Herbology', 'intersect_Defense...']
+            weight_cols    = header[1+n:1+2*n]   # ex: ['weight_Herbology',    'weight_Defense...']
+
+            feat_inter  = [c.split('_', 1)[1] for c in intersect_cols]
+            feat_weight = [c.split('_', 1)[1] for c in weight_cols]
+            assert feat_inter == feat_weight, "Model CSV malformed: intersect/weight features differ"
+
+            features = feat_inter
+
+            intercept = {}
+            weight = {}
+            for row in reader:
+                house = row[0]
+                intersect_str = row[1:1+n]
+                weight_str    = row[1+n:1+2*n]
+                intercept[house] = [float(x) for x in intersect_str]
+                weight[house]    = [float(x) for x in weight_str]
+
+        dataset_features = predict_dataset.get_features()
         scores = {}
         samples = predict_dataset.get_samples()
-        notes_raw = [np.array([samples[i][features.index(ft)] for i in range(len(samples))]) for ft in features]
+        notes_raw = [
+            predict_dataset.get_samples()[:, dataset_features.index(ft)]
+            for ft in features
+        ]
+
         notes = self._normalize(notes_raw)
         for house in LogisticModel.houses:
             linear_output = [intercept[house][i] + weight[house][i] * notes[i] for i in range(len(intercept[house]))]
@@ -163,3 +180,4 @@ class LogisticModel:
         house_index = [np.argmax(np.array([scores[house][i] for house in LogisticModel.houses])) for i in range(len(notes[0]))]
         houses = [LogisticModel.houses[house_index[i]] for i in range(len(house_index))]
         self._store_prediction(houses, get_path('predictions/predictions.csv'))
+
