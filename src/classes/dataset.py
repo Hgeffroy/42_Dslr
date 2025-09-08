@@ -139,7 +139,7 @@ class Dataset:
             os.makedirs(directory)
         fig.savefig(directory + filename + '.png')
 
-    def scatter(self, feature1, feature2):
+    def scatter(self, feature1, feature2, filename):
         if feature1 not in self.features or feature2 not in self.features:
             raise ValueError("Feature do not exist")
 
@@ -158,7 +158,7 @@ class Dataset:
         directory = get_path('figures/')
         if not os.path.isdir(directory):
             os.makedirs(directory)
-        fig.savefig(directory + 'scatter.png')
+        fig.savefig(directory + filename + '.png')
 
     def pair_plot(self):
         colors = ['red', 'yellow', 'blue', 'green']

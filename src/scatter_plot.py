@@ -13,6 +13,12 @@ def build_parser(description: str) -> argparse.ArgumentParser:
         default=get_path("datasets/dataset_train.csv"),
         help="The path to the data training CSV."
     )
+    parser.add_argument(
+        "-n", "--filename",
+        type=str,
+        default="scatter",
+        help="The name of the output image."
+    )
 
     return parser
 
@@ -34,7 +40,7 @@ def main():
         return
 
     dataset = Dataset(args.data)
-    dataset.scatter('Astronomy', 'Defense Against the Dark Arts')
+    dataset.scatter('Astronomy', 'Defense Against the Dark Arts', args.filename)
 
 
 if __name__ == "__main__":
