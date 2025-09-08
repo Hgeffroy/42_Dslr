@@ -120,7 +120,7 @@ class Dataset:
         print(f"{'Max':10}" + " | ".join(f"{self._maxi(self.np_samples[:, i]):12.5f}" for i in range(self.np_samples.shape[1])))
         print(f"{'Range':10}" + " | ".join(f"{self._range(self.np_samples[:, i]):12.5f}" for i in range(self.np_samples.shape[1])))
 
-    def histogram(self, feature):
+    def histogram(self, feature, filename):
         colors = ['red', 'yellow', 'blue', 'green']
         if feature not in self.features:
             raise ValueError("Feature do not exist")
@@ -137,7 +137,7 @@ class Dataset:
         directory = get_path('figures/')
         if not os.path.isdir(directory):
             os.makedirs(directory)
-        fig.savefig(directory + 'histogram.png')
+        fig.savefig(directory + filename + '.png')
 
     def scatter(self, feature1, feature2):
         if feature1 not in self.features or feature2 not in self.features:
