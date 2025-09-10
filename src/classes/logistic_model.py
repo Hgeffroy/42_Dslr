@@ -127,7 +127,7 @@ class LogisticModel:
         }
         return batch_notes, batch_binary_dict
 
-    def train(self, training_dataset, training_features, batch_size=0):
+    def train(self, training_dataset, training_features, batch_size, iterations):
         self.nb_samples = training_dataset.get_nb_samples()
         self.nb_features = len(training_features)
 
@@ -147,7 +147,7 @@ class LogisticModel:
 
         notes = self._normalize(list_notes_raw)
 
-        for it in trange(1000000, desc='Training'):
+        for it in trange(iterations, desc='Training'):
             batch_notes, batch_binary_dict = self._select_batch(notes, binary_dict, it, batch_size)
             derivative_intercept_dict, derivative_weight_dict = self._derivative_cost_function(batch_notes, batch_binary_dict, intercept, weight)
             # if self._accuracy_reached(derivative_weight_dict):

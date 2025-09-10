@@ -28,6 +28,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Batch size while training. 1 for stochastic GD.",
     )
 
+    parser.add_argument(
+        "-i", "--iterations",
+        type=int,
+        default=1000,
+        help="Number of iterations for training.",
+    )
+
     return parser
 
 
@@ -36,7 +43,7 @@ def main():
     args = parser.parse_args()
     dataset = Dataset(args.data)
     model = LogisticModel()
-    model.train(dataset, args.features.split(","), args.batch_size)
+    model.train(dataset, args.features.split(","), args.batch_size, args.iterations)
 
 
 if __name__ == "__main__":
