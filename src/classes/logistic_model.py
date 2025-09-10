@@ -82,7 +82,7 @@ class LogisticModel:
             for i in range(len(houses)):
                 writer.writerow([i, houses[i]])
 
-    def _accuracy_reached(self, derivative_intercept_dict, derivative_weight_dict):
+    def _accuracy_reached(self, derivative_weight_dict):
         for house in derivative_weight_dict:
             for value in derivative_weight_dict[house]:
                 if abs(value) > self.accuracy:
@@ -105,8 +105,29 @@ class LogisticModel:
             weight_dict[house] = [(1 / self.nb_samples) * np.sum(error * notes[i]) for i in range(self.nb_features)]
 
         return intercept_dict, weight_dict
+    
+    def _select_batch(self, notes, binary_dict, it, batch_size):
+        if batch_size <= 0 or batch_size > self.nb_samples:
+            return notes, binary_dict
+        
+        it_for_full_batch = (self.nb_samples / batch_size) + 1
+        it = it % it_for_full_batch
 
-    def train(self, training_dataset, training_features):
+        batch_notes = [np.array([])] * len(notes)
+        for i in range (len(notes)):
+            for j in range(int(it * batch_size), int(min((it + 1) * batch_size, self.nb_samples))):
+                batch_notes[i] = np.append(batch_notes[i], notes[i][j])
+
+
+        batch_binary_dict = {
+            'Gryffindor': binary_dict['Gryffindor'][int(it * batch_size) : int(min((it + 1) * batch_size, self.nb_samples))],
+            'Ravenclaw': binary_dict['Ravenclaw'][int(it * batch_size) : int(min((it + 1) * batch_size, self.nb_samples))],
+            'Hufflepuff': binary_dict['Hufflepuff'][int(it * batch_size) : int(min((it + 1) * batch_size, self.nb_samples))],
+            'Slytherin': binary_dict['Slytherin'][int(it * batch_size) : int(min((it + 1) * batch_size, self.nb_samples))],
+        }
+        return batch_notes, batch_binary_dict
+
+    def train(self, training_dataset, training_features, batch_size=0):
         self.nb_samples = training_dataset.get_nb_samples()
         self.nb_features = len(training_features)
 
@@ -126,10 +147,11 @@ class LogisticModel:
 
         notes = self._normalize(list_notes_raw)
 
-        for _ in trange(1000, desc='Training'):
-            derivative_intercept_dict, derivative_weight_dict = self._derivative_cost_function(notes, binary_dict, intercept, weight)
-            if self._accuracy_reached(derivative_intercept_dict, derivative_weight_dict):
-                break
+        for it in trange(1000000, desc='Training'):
+            batch_notes, batch_binary_dict = self._select_batch(notes, binary_dict, it, batch_size)
+            derivative_intercept_dict, derivative_weight_dict = self._derivative_cost_function(batch_notes, batch_binary_dict, intercept, weight)
+            # if self._accuracy_reached(derivative_weight_dict):
+            #     break
             for house in LogisticModel.houses:
                 intercept[house] = intercept[house] - (derivative_intercept_dict[house] * self.learning_rate) / self.nb_samples
                 weight[house] = [weight[house][i] - (derivative_weight_dict[house][i] * self.learning_rate) for i in range(len(derivative_weight_dict[house]))]

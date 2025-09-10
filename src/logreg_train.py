@@ -21,6 +21,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Features to use for training separated by a comma.",
     )
 
+    parser.add_argument(
+        "-b", "--batch_size",
+        type=int,
+        default=0,
+        help="Batch size while training. 1 for stochastic GD.",
+    )
+
     return parser
 
 
@@ -29,7 +36,7 @@ def main():
     args = parser.parse_args()
     dataset = Dataset(args.data)
     model = LogisticModel()
-    model.train(dataset, args.features.split(","))
+    model.train(dataset, args.features.split(","), args.batch_size)
 
 
 if __name__ == "__main__":
