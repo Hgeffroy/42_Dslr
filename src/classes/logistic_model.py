@@ -23,8 +23,6 @@ class LogisticModel:
         Stores the data of known Hogwarts students
     """
 
-    learning_rate = 0.5
-    accuracy = 0.001
     houses = ['Gryffindor', 'Hufflepuff', 'Ravenclaw', 'Slytherin']
 
     def __init__(self) -> None:
@@ -127,7 +125,7 @@ class LogisticModel:
         }
         return batch_notes, batch_binary_dict
 
-    def train(self, training_dataset, training_features, batch_size, iterations):
+    def train(self, training_dataset, training_features, batch_size, iterations, learning_rate):
         self.nb_samples = training_dataset.get_nb_samples()
         self.nb_features = len(training_features)
 
@@ -150,11 +148,9 @@ class LogisticModel:
         for it in trange(iterations, desc='Training'):
             batch_notes, batch_binary_dict = self._select_batch(notes, binary_dict, it, batch_size)
             derivative_intercept_dict, derivative_weight_dict = self._derivative_cost_function(batch_notes, batch_binary_dict, intercept, weight)
-            # if self._accuracy_reached(derivative_weight_dict):
-            #     break
             for house in LogisticModel.houses:
-                intercept[house] = intercept[house] - (derivative_intercept_dict[house] * self.learning_rate) / self.nb_samples
-                weight[house] = [weight[house][i] - (derivative_weight_dict[house][i] * self.learning_rate) for i in range(len(derivative_weight_dict[house]))]
+                intercept[house] = intercept[house] - (derivative_intercept_dict[house] * learning_rate) / self.nb_samples
+                weight[house] = [weight[house][i] - (derivative_weight_dict[house][i] * learning_rate) for i in range(len(derivative_weight_dict[house]))]
 
         self._store_model(intercept, weight, training_features, 'models/models.csv')
 

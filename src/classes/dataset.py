@@ -153,7 +153,6 @@ class Dataset:
         print(f"{'':10}" + " | ".join(f"{feat:12.12}" for feat in self.features))
         print(f"{'Count':10}" + " | ".join(f"{self._count(self.samples[:, i]):12.5f}" for i in range(self.samples.shape[1])))
         print(f"{'Mean':10}" + " | ".join(f"{self._mean(self.samples[:, i]):12.5f}" for i in range(self.samples.shape[1])))
-        print(f"{'Median':10}" + " | ".join(f"{self._median(self.samples[:, i]):12.5f}" for i in range(self.samples.shape[1])))
         print(f"{'Std':10}" + " | ".join(f"{self._std(self.samples[:, i]):12.5f}" for i in range(self.samples.shape[1])))
         print(f"{'Min':10}" + " | ".join(f"{self._mini(self.samples[:, i]):12.5f}" for i in range(self.samples.shape[1])))
         print(f"{'25%':10}" + " | ".join(f"{self._quartile(self.samples[:, i], 1, 4):12.5f}" for i in range(self.samples.shape[1])))
