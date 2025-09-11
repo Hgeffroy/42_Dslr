@@ -192,5 +192,5 @@ class LogisticModel:
 
         house_index = [np.argmax(np.array([scores[house][i] for house in LogisticModel.houses])) for i in range(self.nb_samples)]
         houses = [LogisticModel.houses[house_index[i]] for i in range(len(house_index))]
-        self._store_prediction(houses, get_path('predictions/predictions.csv'))
+        self._store_prediction(houses, get_path('houses.csv'))
 
