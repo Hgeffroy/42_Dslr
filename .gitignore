@@ -9,3 +9,4 @@ src/classes/__pycache__
 /models
 /figures
 *.csv
+evaluate.py

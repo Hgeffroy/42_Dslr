@@ -55,7 +55,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-f", "--features",
         type=str,
-        default="Herbology,Defense Against the Dark Arts,Ancient Runes,Astronomy",
+        default="Astronomy,Herbology,Divination,Muggle Studies,Ancient Runes,History of Magic,Transfiguration,Potions,Charms,Flying",
         help="Features to use for training separated by a comma.",
     )
 
@@ -69,14 +69,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "-i", "--iterations",
         type=range_limited_int_type,
-        default=1000,
+        default=50000,
         help="Number of iterations for training.",
     )
 
     parser.add_argument(
         "-l", "--learning_rate",
         type=range_limited_float_type,
-        default=0.5,
+        default=0.001,
         help="Learning rate during training.",
     )
 
