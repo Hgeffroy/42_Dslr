@@ -93,7 +93,6 @@ class Dataset:
         return math.sqrt(
             np.sum((feature - self._mean(feature)) ** 2) / len(feature))
 
-
     @staticmethod
     def _mini(feature):
         m = math.inf
@@ -137,6 +136,12 @@ class Dataset:
 
     def get_samples(self):
         return self.np_samples
+
+    def get_nb_samples(self):
+        return len(self.np_samples)
+
+    def get_nb_features(self):
+        return len(self.features)
 
     def describe(self):
         print(f"{'':10}" + " | ".join(f"{feat:12.12}" for feat in self.features))
