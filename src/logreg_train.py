@@ -2,7 +2,18 @@ from classes.logistic_model import LogisticModel
 from classes.dataset import Dataset
 from utils import get_path
 import argparse
+import sys
 
+def range_limited_int_type(arg):
+    """ Type function for argparse - a int within some predefined bounds """
+    try:
+        maxint = sys.maxsize
+        f = int(arg)
+    except ValueError:    
+        raise argparse.ArgumentTypeError("Must be a int number")
+    if f <= 0 or f >= maxint:
+        raise argparse.ArgumentTypeError("Argument must be < " + str(maxint) + " and > " + str(0))
+    return f
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
@@ -23,21 +34,21 @@ def build_parser() -> argparse.ArgumentParser:
 
     parser.add_argument(
         "-b", "--batch_size",
-        type=int,
+        type=range_limited_int_type,
         default=0,
-        help="Batch size while training. If given a value <= 0, will train with the biggest batch.",
+        help="Batch size while training.",
     )
 
     parser.add_argument(
         "-i", "--iterations",
-        type=int,
+        type=range_limited_int_type,
         default=1000,
         help="Number of iterations for training.",
     )
 
     parser.add_argument(
         "-l", "--learning_rate",
-        type=int,
+        type=range_limited_int_type,
         default=0.5,
         help="Learning rate during training.",
     )

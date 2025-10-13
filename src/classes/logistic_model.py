@@ -68,9 +68,6 @@ class LogisticModel:
 
     @staticmethod
     def _store_prediction(houses, file):
-        directory = get_path('predictions/')
-        if not os.path.isdir(directory):
-            os.makedirs(directory)
         if os.path.exists(file):
             os.remove(file)
 
