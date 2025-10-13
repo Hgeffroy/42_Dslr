@@ -7,5 +7,5 @@ src/classes/__pycache__
 /figures
 /.idea
 /models
-/predictions
 /figures
+*.csv

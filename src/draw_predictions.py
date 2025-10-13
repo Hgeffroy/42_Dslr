@@ -36,8 +36,8 @@ def build_parser():
 	parser.add_argument(
 		"-p", "--predictions",
 		type=str,
-		default=get_path("predictions/predictions.csv"),
-		help="Path to predictions CSV (default: predictions/predictions.csv)"
+		default=get_path("houses.csv"),
+		help="Path to predictions CSV (default: houses.csv)"
 	)
 	return parser
 

@@ -26,7 +26,7 @@ def build_parser() -> argparse.ArgumentParser:
 def main():
     parser = build_parser()
     args = parser.parse_args()
-    dataset = Dataset(args.data)
+    dataset = Dataset(args.data, False)
     model = LogisticModel()
     model.predict(args.model, dataset)
 
