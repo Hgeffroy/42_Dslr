@@ -4,6 +4,11 @@ import pandas as pds
 from classes.dataset import Dataset
 from utils import get_path
 
+def check_args(args, dataset):
+    for ft in args.features.split(","):
+        if ft not in dataset.get_features():
+            raise ValueError(f'Feature {ft} does not exist')
+
 def build_parser(description: str) -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=description)
         
@@ -18,6 +23,12 @@ def build_parser(description: str) -> argparse.ArgumentParser:
         type=str,
         default="scatter",
         help="The name of the output image."
+    )
+    parser.add_argument(
+        "-f", "--features",
+        type=str,
+        default="Astronomy,Defense Against the Dark Arts",
+        help="The features that we want to plot."
     )
 
     return parser
@@ -40,7 +51,9 @@ def main():
         return
 
     dataset = Dataset(args.data)
-    dataset.scatter('Astronomy', 'Defense Against the Dark Arts', args.filename)
+    check_args(args, dataset)
+    features = args.features.split(",")
+    dataset.scatter(features[0], features[1], args.filename)
 
 
 if __name__ == "__main__":
