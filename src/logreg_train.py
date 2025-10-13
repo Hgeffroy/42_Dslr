@@ -31,6 +31,17 @@ def range_limited_int_type(arg):
         raise argparse.ArgumentTypeError("Argument must be < " + str(maxint) + " and > " + str(0))
     return f
 
+def range_limited_int_type_zero(arg):
+    """ Type function for argparse - a int within some predefined bounds """
+    try:
+        maxint = sys.maxsize
+        f = int(arg)
+    except ValueError:    
+        raise argparse.ArgumentTypeError("Must be a int number")
+    if f < 0 or f >= maxint:
+        raise argparse.ArgumentTypeError("Argument must be < " + str(maxint) + " and > " + str(0))
+    return f
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
 
@@ -50,9 +61,9 @@ def build_parser() -> argparse.ArgumentParser:
 
     parser.add_argument(
         "-b", "--batch_size",
-        type=range_limited_int_type,
+        type=range_limited_int_type_zero,
         default=0,
-        help="Batch size while training.",
+        help="Batch size while training. 0 = max-size",
     )
 
     parser.add_argument(
