@@ -41,7 +41,7 @@ python3 src/train.py data/dataset_train.csv
 This will:
 - Normalize the dataset
 - Train one-vs-all logistic regression models
-- Save learned parameters in weights/
+- Save learned parameters
 
 ### 3️⃣ Prediction
 
