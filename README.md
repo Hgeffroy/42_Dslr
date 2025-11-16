@@ -50,7 +50,7 @@ Use your trained model to predict houses for dataset_test.csv:
 python3 src/predict.py data/dataset_test.csv
 ```
 
-📌 Concepts Covered
+## 📌 Concepts Covered
 
 - Data Cleaning & Normalization
 - Exploratory Data Analysis (EDA)
