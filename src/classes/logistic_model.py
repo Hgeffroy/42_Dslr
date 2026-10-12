@@ -159,7 +159,7 @@ class LogisticModel:
             batch_notes, batch_binary_dict = self._select_batch(notes, binary_dict, it, batch_size)
             derivative_intercept_dict, derivative_weight_dict = self._derivative_cost_function(batch_notes, batch_binary_dict, intercept, weight)
             for house in LogisticModel.houses:
-                intercept[house] = intercept[house] - (derivative_intercept_dict[house] * learning_rate) / self.nb_samples
+                intercept[house] = intercept[house] - derivative_intercept_dict[house] * learning_rate
                 weight[house] = [weight[house][i] - (derivative_weight_dict[house][i] * learning_rate) for i in range(len(derivative_weight_dict[house]))]
 
             if on_progress is not None and (it % progress_every == 0 or it == iterations - 1):
