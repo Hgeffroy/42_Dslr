@@ -63,6 +63,8 @@ Watch the training live with `-p`: the loss of each one-vs-all classifier, plus 
 python3 src/logreg_train.py -p -f "Astronomy,Herbology" -i 5000 -l 0.1
 ```
 
+![Training live view: loss per classifier and decision regions](media/demo.gif)
+
 ### 3️⃣ Prediction
 
 Use your trained model to predict houses for `dataset_test.csv` (written to `houses.csv`):
@@ -74,6 +76,8 @@ Plot the distribution of predictions (saved in `figures/`):
 ```
 python3 src/draw_predictions.py -p houses.csv
 ```
+
+<img src="media/predictions.png" alt="Number of test students predicted per house" width="500">
 
 ## 📌 Concepts Covered
 
