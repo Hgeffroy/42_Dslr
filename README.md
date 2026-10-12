@@ -15,39 +15,59 @@ You will:
 The project focuses on understanding ML mechanics rather than relying on existing libraries.
 
 ## 🚀 Usage
+### 0️⃣ Setup
+
+```
+pip install -r requirements.txt
+```
+
+All scripts default to the CSVs in `datasets/`, so they can be run without arguments. Use `-h` on any script to see its options.
+
 ### 1️⃣ Exploratory Analysis
 
-Generate histograms:
+Print statistical indicators (count, mean, std, min, quartiles, max) for each feature:
 ```
-python3 src/histogram.py data/dataset_train.csv
-```
-
-Generate scatter plots:
-```
-python3 src/scatter_plot.py data/dataset_train.csv
+python3 src/describe.py -d datasets/dataset_train.csv
 ```
 
-Generate pair plots:
+Generate histograms (saved in `figures/`):
 ```
-python3 src/pair_plot.py data/dataset_train.csv
+python3 src/histogram.py -d datasets/dataset_train.csv -f "Care of Magical Creatures"
+```
+
+Generate scatter plots (saved in `figures/`):
+```
+python3 src/scatter_plot.py -d datasets/dataset_train.csv -f "Astronomy,Defense Against the Dark Arts"
+```
+
+Generate pair plots (saved in `figures/`):
+```
+python3 src/pair_plot.py -d datasets/dataset_train.csv
 ```
 
 ### 2️⃣ Training the Logistic Regression Model
 
 Train the classifier:
 ```
-python3 src/train.py data/dataset_train.csv
+python3 src/logreg_train.py -d datasets/dataset_train.csv
 ```
 This will:
 - Normalize the dataset
 - Train one-vs-all logistic regression models
-- Save learned parameters
+- Save learned parameters in `models/models.csv`
+
+Optional flags: `-f` (comma-separated features), `-b` (batch size, `0` = full batch), `-i` (iterations), `-l` (learning rate).
 
 ### 3️⃣ Prediction
 
-Use your trained model to predict houses for dataset_test.csv:
+Use your trained model to predict houses for `dataset_test.csv` (written to `houses.csv`):
 ```
-python3 src/predict.py data/dataset_test.csv
+python3 src/logreg_predict.py -d datasets/dataset_test.csv -m models/models.csv
+```
+
+Plot the distribution of predictions (saved in `figures/`):
+```
+python3 src/draw_predictions.py -p houses.csv
 ```
 
 ## 📌 Concepts Covered
