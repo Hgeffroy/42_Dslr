@@ -101,6 +101,19 @@ class LogisticModel:
 
         return intercept_dict, weight_dict
     
+    def _cost_function(self, notes, binary_dict, intercept, weight):
+        """
+            Cross-entropy loss of each one-vs-all classifier on the given samples
+        """
+        eps = 1e-15
+        cost_dict = {}
+        for house in LogisticModel.houses:
+            linear_output = intercept[house] + np.dot(weight[house], notes)
+            sig = np.clip(self._sigmoid(linear_output), eps, 1 - eps)
+            y = np.array(binary_dict[house])
+            cost_dict[house] = float(-np.mean(y * np.log(sig) + (1 - y) * np.log(1 - sig)))
+        return cost_dict
+
     def _select_batch(self, notes, binary_dict, it, batch_size):
         if batch_size <= 0 or batch_size > self.nb_samples:
             return notes, binary_dict
@@ -122,7 +135,7 @@ class LogisticModel:
         }
         return batch_notes, batch_binary_dict
 
-    def train(self, training_dataset, training_features, batch_size, iterations, learning_rate):
+    def train(self, training_dataset, training_features, batch_size, iterations, learning_rate, on_progress=None, progress_every=100):
         self.nb_samples = training_dataset.get_nb_samples()
         self.nb_features = len(training_features)
 
@@ -148,6 +161,10 @@ class LogisticModel:
             for house in LogisticModel.houses:
                 intercept[house] = intercept[house] - (derivative_intercept_dict[house] * learning_rate) / self.nb_samples
                 weight[house] = [weight[house][i] - (derivative_weight_dict[house][i] * learning_rate) for i in range(len(derivative_weight_dict[house]))]
+
+            if on_progress is not None and (it % progress_every == 0 or it == iterations - 1):
+                cost_dict = self._cost_function(notes, binary_dict, intercept, weight)
+                on_progress(it + 1, intercept, weight, cost_dict, notes, binary_dict)
 
         self._store_model(intercept, weight, training_features, 'models/models.csv')
 

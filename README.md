@@ -58,6 +58,11 @@ This will:
 
 Optional flags: `-f` (comma-separated features), `-b` (batch size, `0` = full batch), `-i` (iterations), `-l` (learning rate).
 
+Watch the training live with `-p`: the loss of each one-vs-all classifier, plus the decision regions when training on exactly two features:
+```
+python3 src/logreg_train.py -p -f "Astronomy,Herbology" -i 5000 -l 0.1
+```
+
 ### 3️⃣ Prediction
 
 Use your trained model to predict houses for `dataset_test.csv` (written to `houses.csv`):

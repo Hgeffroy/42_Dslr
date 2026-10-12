@@ -1,5 +1,6 @@
 from classes.logistic_model import LogisticModel
 from classes.dataset import Dataset
+from classes.training_plot import TrainingPlot
 from utils import get_path
 import argparse
 import sys
@@ -80,6 +81,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Learning rate during training.",
     )
 
+    parser.add_argument(
+        "-p", "--plot",
+        action="store_true",
+        help="Show the loss of each classifier live during training (and the decision regions when training on 2 features).",
+    )
+
     return parser
 
 def main():
@@ -88,7 +95,14 @@ def main():
     dataset = Dataset(args.data)
     check_args(args, dataset)
     model = LogisticModel()
-    model.train(dataset, args.features.split(","), args.batch_size, args.iterations, args.learning_rate)
+    features = args.features.split(",")
+    if args.plot:
+        plot = TrainingPlot(features, args.iterations)
+        model.train(dataset, features, args.batch_size, args.iterations, args.learning_rate,
+                    on_progress=plot.update, progress_every=max(1, args.iterations // 200))
+        plot.keep_open()
+    else:
+        model.train(dataset, features, args.batch_size, args.iterations, args.learning_rate)
 
 
 if __name__ == "__main__":
